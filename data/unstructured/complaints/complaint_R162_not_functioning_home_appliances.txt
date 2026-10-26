@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0162
+Channel: Mobile app feedback
+Received: 2026-03-16 12:00 IST
+Customer ID: C00295
+Customer name: Hamsini Contractor
+Order ID: O00287
+Return ID: R162
+Product: ChefMate Digital Air Fryer 4L (product P00050)
+Subject: Product not working - order O00287
+------------------------------------------------------------
+Hi,
+
+My air fryer stopped working after a few days: the unit switches off after a few minutes. This is about order O00287, delivered on 2026-02-17. This is quite disappointing because I ordered it for a family function.
+
+Regards,
+Hamsini Contractor
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

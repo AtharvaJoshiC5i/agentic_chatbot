@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0101
+Channel: Web return form
+Received: 2026-03-08 10:12 IST
+Customer ID: C00101
+Customer name: Ganga Murthy
+Order ID: O101
+Return ID: R101
+Product: FlexFit USB-C Hub 7-in-1 (product P_R101)
+Subject: Return request - USB-C hub not needed
+------------------------------------------------------------
+Reason selected: Changed my mind
+
+Hi, I ordered the FlexFit USB-C Hub 7-in-1 on order O101 and it was delivered on 2026-03-03. My office has now issued me a docking station so I don't need the hub any more. I opened the box to check it but have not really used it. Everything is back in the box including the pouch and guide. Please arrange a pickup and refund to my original payment method.
+
+Thanks,
+Ganga Murthy
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

@@ -1,0 +1,18 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0107
+Channel: Call centre note
+Received: 2026-03-10 17:25 IST
+Customer ID: C00107
+Customer name: Daksha Mangat
+Order ID: O107
+Return ID: R107
+Product: SoundPeak Wireless Headphones Pro (product P_R107)
+Subject: Customer reports wrong item received
+------------------------------------------------------------
+Call summary (agent: Farhan, inbound, 9 min)
+
+Customer called about order O107 (SoundPeak Wireless Headphones Pro, delivered 2026-03-04). The customer says the item received is not what was ordered and wants to return it. When asked, the customer could not find the carry case in the box. The customer agreed to pack the item in its original box for pickup.
+
+Raised return R107, reason "wrong_product". Advised the customer that the warehouse will inspect the item and that we will contact them if we need any more information. Customer was polite and cooperative.
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

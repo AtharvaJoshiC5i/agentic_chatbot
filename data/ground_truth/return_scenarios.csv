@@ -1,0 +1,16 @@
+return_id,scenario_slug,title,expected_investigation_outcome,expected_signal,notes
+R101,valid_return,Valid return,eligible_for_standard_resolution,no_inconsistency_detected,Standard eligible return within policy window.
+R102,serial_mismatch,Serial-number mismatch,manual_investigation_required,additional_verification_required,Purchased serial HP9081; warehouse received HP9012.
+R103,outside_return_window,Outside return window,policy_exception_review_required,additional_verification_required,Return requested beyond electronics 30-day window.
+R104,delivery_damage,Delivery damage,manual_investigation_required,additional_verification_required,Delivery issue recorded; damage claim on receipt.
+R105,verified_defect,Verified defect,warranty_review_required,no_inconsistency_detected,Inspection verified manufacturing defect.
+R106,already_refunded,Already refunded,eligible_for_standard_resolution,no_inconsistency_detected,Completed refund at rest; duplicate signal only with open refund row.
+R107,repeated_inconsistencies,Repeated inconsistencies,manual_investigation_required,manual_investigation_required,Customer history shows repeated mismatched returns.
+R108,repairable_product,Repairable product,eligible_for_standard_resolution,no_inconsistency_detected,Laptop keyboard damage; repair-and-resell is feasible.
+R109,missing_accessories,Missing accessories,policy_exception_review_required,additional_verification_required,Accessories incomplete per inspection.
+R110,conflicting_inspections,Conflicting inspection reports,manual_investigation_required,conflicting_inspection_findings,Two inspections disagree on defect verification.
+R111,wrong_product,Wrong product delivered,manual_investigation_required,product_mismatch,Returned SKU does not match purchased item.
+R112,warranty_claim,Warranty claim,warranty_review_required,no_inconsistency_detected,Failure within warranty period.
+R113,missing_inspection,Missing inspection,additional_inspection_required,insufficient_evidence,Return received but no inspection record.
+R114,incorrect_return_record,Incorrect return record,manual_investigation_required,additional_verification_required,Return reason conflicts with order line item.
+R115,unsafe_product,Unsafe product,manual_investigation_required,manual_investigation_required,Unsafe condition; resale must be blocked.

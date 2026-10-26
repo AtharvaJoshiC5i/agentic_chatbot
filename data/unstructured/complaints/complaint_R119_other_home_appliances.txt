@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0119
+Channel: Web return form
+Received: 2026-03-16 15:42 IST
+Customer ID: C00282
+Customer name: Lakshmi Parmer
+Order ID: O00812
+Return ID: R119
+Product: HomeHive Digital Air Fryer 4L Pro (product P00046)
+Subject: Question about my return - order O00812
+------------------------------------------------------------
+Dear Customer Care,
+
+I would like store credit instead of a refund if possible. This is about order O00812, delivered on 2026-02-26. I have kept all the packaging.
+
+Please help at the earliest.
+Thanks,
+Lakshmi Parmer
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

@@ -1,0 +1,22 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0105
+Channel: Live chat transcript
+Received: 2026-02-25 15:02 IST
+Customer ID: C00105
+Customer name: Osha Raghavan
+Order ID: O105
+Return ID: R105
+Product: FlexFit USB-C Hub 7-in-1 (product P_R105)
+Subject: USB-C hub stopped charging laptop
+------------------------------------------------------------
+[15:02] Customer: hi, my flexfit usb c hub from order O105 has stopped passing charge to my laptop
+[15:03] Agent (Priya): Sorry to hear that. When did you first notice the issue?
+[15:03] Customer: around 10 days after delivery. laptop shows not charging when charger is in the hub. direct to laptop it charges fine
+[15:05] Agent (Priya): Thank you. Does anything else misbehave?
+[15:05] Customer: hdmi screen also blinks off every few minutes
+[15:06] Agent (Priya): Could you read the serial on the underside of the hub?
+[15:07] Customer: EL5520
+[15:08] Agent (Priya): Thank you. I have raised return R105 with reason "defective". A pickup will be scheduled and the hub will be inspected at our warehouse.
+[15:08] Customer: ok thanks
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

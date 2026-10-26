@@ -1,0 +1,23 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Returns Supervisor <returns-supervisor@shopsphere.invalid>
+Subject: [Case 4] R110 - two inspections disagree, tie-break test needed
+Date: Sat, 14 Mar 2026 12:20:00 +0530
+Message-ID: <r110-1@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R110
+X-ShopSphere-Order-ID: O110
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi,
+
+Return R110 (HomeHive Air Purifier 300, order O110) has two inspection records from 2026-03-13 that disagree:
+
+- IR-2026-00010 (12:00): fault reproduced (E3 shutdown in 3 of 3 cycles); defect verified Yes; result PASS.
+- IR-2026-00011 (18:00): 60-minute run with no fault; defect verified No; result FAIL.
+
+I have not taken a refund or recovery decision. The refund request (INR 12,999.00) stays at "requested" while case 4 (conflicting_evidence) is open. Could you approve an independent tie-break test (4 hours or more at mains voltage, a third technician) and let me know who should run it?
+
+analyst_02
+Returns Investigations, ShopSphere Retail

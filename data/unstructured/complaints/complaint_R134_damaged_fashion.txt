@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0134
+Channel: Mobile app feedback
+Received: 2026-01-12 19:25 IST
+Customer ID: C00075
+Customer name: Prisha Andra
+Order ID: O00815
+Return ID: R134
+Product: NovaWear Casual Sneakers Pro (product P00087)
+Subject: Item received damaged - order O00815
+------------------------------------------------------------
+Namaste,
+
+The sneakers arrived with a torn seam at the shoulder. This is about order O00815, delivered on 2025-12-29.
+
+Kindly do the needful.
+Regards,
+Prisha Andra
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0122
+Channel: Mobile app feedback
+Received: 2025-08-07 17:32 IST
+Customer ID: C00238
+Customer name: Jairaj Balakrishnan
+Order ID: O00602
+Return ID: R122
+Product: Ampere Wireless Mouse (product P00083)
+Subject: Wrong item delivered - order O00602
+------------------------------------------------------------
+Good afternoon,
+
+I received a different item from the mouse I ordered. This is about order O00602, delivered on 2025-07-31. I have been a ShopSphere customer for a long time and this is the first time I've had a problem.
+
+Waiting for your reply.
+
+Jairaj Balakrishnan
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

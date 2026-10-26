@@ -1,0 +1,57 @@
+{
+  "R102": {
+    "investigate": true,
+    "expected_tools": [
+      "get_return_details",
+      "get_order_details",
+      "get_inspection_results",
+      "search_return_policy",
+      "submit_create_investigation_case"
+    ],
+    "must_not": [
+      "execute_action_request"
+    ]
+  },
+  "R101": {
+    "investigate": true,
+    "expected_tools": [
+      "get_return_details",
+      "search_return_policy",
+      "submit_refund_request"
+    ],
+    "approval_required": true
+  },
+  "R106": {
+    "investigate": true,
+    "expected_tools": [
+      "get_refund_status"
+    ],
+    "must_not": [
+      "execute_action_request"
+    ]
+  },
+  "R108": {
+    "investigate": true,
+    "expected_tools": [
+      "get_return_details",
+      "get_inspection_results",
+      "submit_repair_recovery_task",
+      "get_recovery_recommendation"
+    ]
+  },
+  "R113": {
+    "investigate": true,
+    "expected_tools": [
+      "get_inspection_results",
+      "submit_create_investigation_case"
+    ],
+    "expected_signal": "insufficient_evidence"
+  },
+  "R110": {
+    "investigate": true,
+    "expected_tools": [
+      "get_inspection_results"
+    ],
+    "expected_signal": "conflicting_inspection_findings"
+  }
+}

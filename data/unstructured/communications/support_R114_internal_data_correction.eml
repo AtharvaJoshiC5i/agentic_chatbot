@@ -1,0 +1,23 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Returns Supervisor <returns-supervisor@shopsphere.invalid>
+Subject: [Case 6] R114 - return reason vs line item discrepancy
+Date: Tue, 17 Mar 2026 15:25:00 +0530
+Message-ID: <r114-1@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R114
+X-ShopSphere-Order-ID: O114
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi,
+
+R114 (order O114) needs a data correction before we decide it:
+- Return reason on record: size_color_incorrect
+- Order line item: UrbanWeave Classic Cotton Shirt (P_R114, category fashion)
+- Inspection system note (IR-2026-00014): "Return reason references size mismatch but line item is accessory SKU."
+
+The physical item matches the fashion line item, so the inspection note's reference to an accessory SKU appears to be a record error. I recommend correcting the note and confirming the size details with the customer. Case 6 (data_correction) remains open. Additional verification required.
+
+analyst_02
+Returns Investigations, ShopSphere Retail

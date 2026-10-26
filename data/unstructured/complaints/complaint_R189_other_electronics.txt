@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0189
+Channel: Web return form
+Received: 2025-07-10 18:45 IST
+Customer ID: C00423
+Customer name: Laksh Dubey
+Order ID: O00170
+Return ID: R189
+Product: TechNova Gaming Laptop 15 Max (product P00051)
+Subject: Question about my return - order O00170
+------------------------------------------------------------
+Good afternoon,
+
+I was charged a return fee that I was not told about. This is about order O00170, delivered on 2025-06-13. I have been a ShopSphere customer for a long time and this is the first time I've had a problem.
+
+Waiting for your reply.
+
+Laksh Dubey
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

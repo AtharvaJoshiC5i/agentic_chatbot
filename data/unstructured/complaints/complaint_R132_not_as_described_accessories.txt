@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0132
+Channel: Mobile app feedback
+Received: 2026-03-17 15:55 IST
+Customer ID: C00097
+Customer name: Lekha Gupta
+Order ID: O01863
+Return ID: R132
+Product: SnapCase Webcam 1080p Pro (product P00096)
+Subject: Product not as described - order O01863
+------------------------------------------------------------
+To the returns team,
+
+The webcam does not match the listing: the material and finish differ from the listing photos. This is about order O01863, delivered on 2026-02-22. I can share photos if needed.
+
+Thank you for your help.
+Lekha Gupta
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

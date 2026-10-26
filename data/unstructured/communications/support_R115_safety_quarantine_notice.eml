@@ -1,0 +1,29 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Product Safety Lead <product-safety@shopsphere.invalid>
+Cc: Returns Supervisor <returns-supervisor@shopsphere.invalid>,
+ Warehouse Operations <wh-ops@shopsphere.invalid>
+Subject:
+ [SAFETY][Case 7] R115 HomeHive Air Purifier 300 HA9933 - unsafe, no resale
+Date: Sat, 14 Mar 2026 16:30:00 +0530
+Message-ID: <r115-1@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R115
+X-ShopSphere-Order-ID: O115
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Product Safety Lead,
+
+Inspection IR-2026-00015 (2026-03-14) classified the returned HomeHive Air Purifier 300, serial HA9933 (return R115, order O115), as UNSAFE. Findings: scorch marks and melted plastic at the power inlet, burning odour, and a failed insulation resistance test.
+
+Actions taken:
+- Unit quarantined in the hazardous-goods cage, tagged QUARANTINE - DO NOT RESELL.
+- Investigation case 7 (safety_concern, priority high) opened.
+- Disposition restricted to recycle or dispose per RFB-SAF-2025-02. No resale, refurbishment for resale, or return to stock.
+- Supplier S001 to be notified through a supplier defect report.
+
+Please advise if a field safety notice should be considered.
+
+analyst_02
+Returns Investigations, ShopSphere Retail

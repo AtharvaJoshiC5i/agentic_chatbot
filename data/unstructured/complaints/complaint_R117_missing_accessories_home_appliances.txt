@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0117
+Channel: Web return form
+Received: 2025-11-23 13:44 IST
+Customer ID: C00087
+Customer name: Tristan Iyengar
+Order ID: O00396
+Return ID: R117
+Product: HomeHive Steam Iron (product P00075)
+Subject: Items missing in box - order O00396
+------------------------------------------------------------
+Hi,
+
+The box for the steam iron was missing the power cord and the warranty card. This is about order O00396, delivered on 2025-11-20. This is quite disappointing because I ordered it for a family function.
+
+Regards,
+Tristan Iyengar
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

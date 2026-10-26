@@ -1,0 +1,23 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Warehouse Operations <wh-ops@shopsphere.invalid>
+Subject: R113 - received 2026-03-14 but no inspection record; please schedule
+ inspection
+Date: Wed, 18 Mar 2026 09:45:00 +0530
+Message-ID: <r113-2@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R113
+X-ShopSphere-Order-ID: O113
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi Warehouse team,
+
+Return R113 (FlexFit USB-C Hub 7-in-1, order O113) shows status "received" with a received date of 2026-03-14, but there is no inspection record in the system and no inspection report on file.
+
+The customer reports that the USB-A ports stopped working (reason: defective). Without an inspection we have insufficient evidence for a decision. Please create an inspection task and confirm the bin location of the unit.
+
+No refund will be requested until an inspection is recorded.
+
+analyst_02
+Returns Investigations, ShopSphere Retail

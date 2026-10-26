@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0140
+Channel: Web return form
+Received: 2026-03-10 11:44 IST
+Customer ID: C00242
+Customer name: Mitesh Tara
+Order ID: O00129
+Return ID: R140
+Product: UrbanWeave Casual Sneakers (product P00065)
+Subject: Wrong item delivered - order O00129
+------------------------------------------------------------
+Hi,
+
+I received a different item from the sneakers I ordered. This is about order O00129, delivered on 2026-02-24. This is quite disappointing because I ordered it for a family function.
+
+Regards,
+Mitesh Tara
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

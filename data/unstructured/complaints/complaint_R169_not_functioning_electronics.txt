@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0169
+Channel: Mobile app feedback
+Received: 2025-10-20 11:19 IST
+Customer ID: C00327
+Customer name: Jonathan Sama
+Order ID: O01007
+Return ID: R169
+Product: Ampere 27-inch Monitor Pro (product P00047)
+Subject: Product not working - order O01007
+------------------------------------------------------------
+Good afternoon,
+
+My monitor stopped working after a few days: one audio channel is dead. This is about order O01007, delivered on 2025-10-10. I have been a ShopSphere customer for a long time and this is the first time I've had a problem.
+
+Waiting for your reply.
+
+Jonathan Sama
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

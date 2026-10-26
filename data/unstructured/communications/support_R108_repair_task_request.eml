@@ -1,0 +1,24 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Refurbishment Centre Bhiwandi <refurb-centre@shopsphere.invalid>
+Subject: R108 - repair task: TechNova Ultrabook 14 keyboard/top-case
+ replacement (LT2044)
+Date: Sun, 08 Mar 2026 14:40:00 +0530
+Message-ID: <r108-2@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R108
+X-ShopSphere-Order-ID: O108
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi Refurbishment team,
+
+Please create a repair task for return R108:
+- Unit: TechNova Ultrabook 14, serial LT2044 (matches the order line)
+- Inspection IR-2026-00008: keyboard damage (J and K keycaps cracked, right Shift missing, J and right Shift not registering); all other diagnostics pass; battery health 94%
+- Proposed recovery: repair_and_resell, keyboard/top-case replacement under RFB-LT-2025-01, then regrade as refurbished
+
+Please confirm parts availability and the expected bench time.
+
+analyst_02
+Returns Investigations, ShopSphere Retail

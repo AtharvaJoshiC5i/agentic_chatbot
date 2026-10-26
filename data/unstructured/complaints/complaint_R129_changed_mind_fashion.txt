@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0129
+Channel: Web return form
+Received: 2025-11-04 11:59 IST
+Customer ID: C00148
+Customer name: Geetika Raghavan
+Order ID: O01840
+Return ID: R129
+Product: StitchCraft Running Shoes Plus (product P00055)
+Subject: Return request - order O01840
+------------------------------------------------------------
+Hi,
+
+I no longer need the shoes. It is unused and in the original packaging. This is about order O01840, delivered on 2025-10-31. This is quite disappointing because I ordered it for a family function.
+
+Regards,
+Geetika Raghavan
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

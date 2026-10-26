@@ -1,0 +1,25 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: SwiftKart Logistics Claims <claims@swiftkart-logistics.invalid>
+Subject: Transit damage claim - shipment for order O104 (delivery D104)
+Date: Sun, 15 Mar 2026 16:00:00 +0530
+Message-ID: <r104-1@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R104
+X-ShopSphere-Order-ID: O104
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Dear Claims team,
+
+We are filing a transit damage claim for delivery D104 (order O104), delivered on 2026-03-06.
+
+Your delivery scan recorded: "Carton crushed; visible impact damage on delivery scan."
+
+Our inspection (IR-2026-00004, 2026-03-14) found a cracked front grille and an impact dent on the left side panel, consistent with the crushed carton corners. The product is a HomeHive Air Purifier 300, value INR 12,999.00.
+
+Please acknowledge the claim and share the hub handling log for this consignment. ShopSphere reference: investigation case 2 (delivery_dispute).
+
+Regards,
+analyst_02
+Returns Investigations, ShopSphere Retail

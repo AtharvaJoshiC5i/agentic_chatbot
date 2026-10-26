@@ -1,0 +1,31 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Warehouse Operations <wh-ops@shopsphere.invalid>
+Cc: Returns Supervisor <returns-supervisor@shopsphere.invalid>
+Subject: [Case 1] R102 serial mismatch HP9081 vs HP9012 - dispatch check
+Date: Sat, 14 Mar 2026 15:10:00 +0530
+Message-ID: <r102-2@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R102
+X-ShopSphere-Order-ID: O102
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi team,
+
+Investigation case 1 (serial_mismatch, priority high, due 2026-03-19) is open for return R102 / order O102.
+
+- Purchased serial (order line): HP9081
+- Returned serial (inspection IR-2026-00002): HP9012
+- Inspection result: inconclusive; defect verified: No (identity not confirmed)
+
+Please check:
+1. The dispatch scan log for O102: which serial was scanned at pack-out?
+2. Whether HP9012 appears on any other order line or in stock.
+3. CCTV at the pack station for the dispatch date (2026-02-24), if it is still retained.
+
+Please do not request a refund on R102 until the case is resolved. The outcome remains "additional verification required" until we have the dispatch evidence.
+
+Thanks,
+analyst_02
+Returns Investigations, ShopSphere Retail

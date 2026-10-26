@@ -1,0 +1,19 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0124
+Channel: Mobile app feedback
+Received: 2026-01-25 14:10 IST
+Customer ID: C00385
+Customer name: Gaurang Sarkar
+Order ID: O00258
+Return ID: R124
+Product: UrbanWeave Padded Winter Jacket 2 (product P00095)
+Subject: Item received damaged - order O00258
+------------------------------------------------------------
+Hello ShopSphere team,
+
+The jacket arrived with a torn seam at the shoulder. This is about order O00258, delivered on 2026-01-23.
+
+Thanks,
+Gaurang Sarkar
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

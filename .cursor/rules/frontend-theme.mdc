@@ -1,0 +1,13 @@
+---
+description: ShopSphere frontend visual standards — always apply when editing frontend/
+globs: frontend/**
+alwaysApply: false
+---
+
+# Frontend theme (mandatory)
+
+- **Light theme only.** Never add dark mode, `prefers-color-scheme: dark`, or dark sidebar backgrounds.
+- Use the **Linen & Ink** tokens in `frontend/src/index.css` (`--bg`, `--surface`, `--accent` teal, `--gold` accents, warm neutrals).
+- Typography: **Inter** for UI and headings (`font-sans` / `font-display` both map to Inter).
+- Aim for **premium retail-ops** polish: calm neutrals, clear hierarchy, minimal decoration (no grain, hover lifts, or stacked ring+shadow cards). Teal for primary actions only; structure via spacing and typography.
+- Prefer CSS variables over hardcoded hex in components.

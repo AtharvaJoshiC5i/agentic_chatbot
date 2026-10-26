@@ -1,0 +1,20 @@
+From: Returns Analyst analyst_02 <analyst02@shopsphere.invalid>
+To: Finance Refunds Desk <refunds-finance@shopsphere.invalid>
+Subject: R106 - repeat refund request; existing completed refund confirmed
+Date: Thu, 12 Mar 2026 13:05:00 +0530
+Message-ID: <r106-4@support.shopsphere.invalid>
+X-ShopSphere-Return-ID: R106
+X-ShopSphere-Order-ID: O106
+X-ShopSphere-Classification: Internal
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hi Finance,
+
+For your records: the customer for return R106 asked for a refund today. The ledger shows refund ID 1 for INR 2,499.00, status completed, approval approved, processed 2026-03-07 (idempotency key refund-R106-primary).
+
+No new refund request has been raised, because a return may have only one completed refund. The customer has been told the processed date and that bank posting can take up to 7 business days. Please let me know if a payment trace is needed later.
+
+analyst_02
+Returns Investigations, ShopSphere Retail

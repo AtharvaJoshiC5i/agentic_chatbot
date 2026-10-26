@@ -1,0 +1,107 @@
+{
+  "R101": {
+    "scenario": "valid_return",
+    "title": "Valid return",
+    "expected_investigation_outcome": "eligible_for_standard_resolution",
+    "expected_signal": "no_inconsistency_detected",
+    "notes": "Standard eligible return within policy window."
+  },
+  "R102": {
+    "scenario": "serial_mismatch",
+    "title": "Serial-number mismatch",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "additional_verification_required",
+    "notes": "Purchased serial HP9081; warehouse received HP9012."
+  },
+  "R103": {
+    "scenario": "outside_return_window",
+    "title": "Outside return window",
+    "expected_investigation_outcome": "policy_exception_review_required",
+    "expected_signal": "additional_verification_required",
+    "notes": "Return requested beyond electronics 30-day window."
+  },
+  "R104": {
+    "scenario": "delivery_damage",
+    "title": "Delivery damage",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "additional_verification_required",
+    "notes": "Delivery issue recorded; damage claim on receipt."
+  },
+  "R105": {
+    "scenario": "verified_defect",
+    "title": "Verified defect",
+    "expected_investigation_outcome": "warranty_review_required",
+    "expected_signal": "no_inconsistency_detected",
+    "notes": "Inspection verified manufacturing defect."
+  },
+  "R106": {
+    "scenario": "already_refunded",
+    "title": "Already refunded",
+    "expected_investigation_outcome": "eligible_for_standard_resolution",
+    "expected_signal": "no_inconsistency_detected",
+    "notes": "Completed refund exists; duplicate payout blocked at API. Signal duplicate only when an open refund row exists."
+  },
+  "R107": {
+    "scenario": "repeated_inconsistencies",
+    "title": "Repeated inconsistencies",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "manual_investigation_required",
+    "notes": "Customer history shows repeated mismatched returns."
+  },
+  "R108": {
+    "scenario": "repairable_product",
+    "title": "Repairable product",
+    "expected_investigation_outcome": "eligible_for_standard_resolution",
+    "expected_signal": "no_inconsistency_detected",
+    "notes": "Laptop keyboard damage; repair-and-resell is feasible."
+  },
+  "R109": {
+    "scenario": "missing_accessories",
+    "title": "Missing accessories",
+    "expected_investigation_outcome": "policy_exception_review_required",
+    "expected_signal": "additional_verification_required",
+    "notes": "Accessories incomplete per inspection."
+  },
+  "R110": {
+    "scenario": "conflicting_inspections",
+    "title": "Conflicting inspection reports",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "conflicting_inspection_findings",
+    "notes": "Two inspections disagree on defect verification."
+  },
+  "R111": {
+    "scenario": "wrong_product",
+    "title": "Wrong product delivered",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "product_mismatch",
+    "notes": "Returned SKU does not match purchased item."
+  },
+  "R112": {
+    "scenario": "warranty_claim",
+    "title": "Warranty claim",
+    "expected_investigation_outcome": "warranty_review_required",
+    "expected_signal": "no_inconsistency_detected",
+    "notes": "Failure within warranty period."
+  },
+  "R113": {
+    "scenario": "missing_inspection",
+    "title": "Missing inspection",
+    "expected_investigation_outcome": "additional_inspection_required",
+    "expected_signal": "insufficient_evidence",
+    "notes": "Return received but no inspection record."
+  },
+  "R114": {
+    "scenario": "incorrect_return_record",
+    "title": "Incorrect return record",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "additional_verification_required",
+    "notes": "Return reason conflicts with order line item."
+  },
+  "R115": {
+    "scenario": "unsafe_product",
+    "title": "Unsafe product",
+    "expected_investigation_outcome": "manual_investigation_required",
+    "expected_signal": "manual_investigation_required",
+    "notes": "Unsafe condition; resale must be blocked."
+  }
+}

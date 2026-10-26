@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0196
+Channel: Web return form
+Received: 2025-11-07 15:17 IST
+Customer ID: C00299
+Customer name: Jatin Sha
+Order ID: O01078
+Return ID: R196
+Product: StitchCraft Cotton Kurta Set 2 (product P00078)
+Subject: Question about my return - order O01078
+------------------------------------------------------------
+Good afternoon,
+
+I want to confirm that my return pickup is still active. This is about order O01078, delivered on 2025-10-07. I have been a ShopSphere customer for a long time and this is the first time I've had a problem.
+
+Waiting for your reply.
+
+Jatin Sha
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

@@ -1,0 +1,20 @@
+ShopSphere Retail — Customer Complaint Record
+Ticket ID: CMP-2026-0138
+Channel: Web return form
+Received: 2026-03-20 14:45 IST
+Customer ID: C00302
+Customer name: Aryan Narang
+Order ID: O00133
+Return ID: R138
+Product: FlexFit 65W GaN Charger Max (product P00076)
+Subject: Defective product - order O00133
+------------------------------------------------------------
+Dear Customer Care,
+
+The charger has a fault: the host device does not detect it on most ports. This is about order O00133, delivered on 2026-02-25. I have kept all the packaging.
+
+Please help at the earliest.
+Thanks,
+Aryan Narang
+------------------------------------------------------------
+Internal use only — ShopSphere Retail.

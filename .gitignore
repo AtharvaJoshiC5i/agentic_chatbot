@@ -1,0 +1,107 @@
+# =============================================================================
+# ShopSphere agentic_chatbot — root .gitignore
+# =============================================================================
+
+# --- Secrets (never commit) ---
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# --- Python (backend + scripts) ---
+.venv/
+venv/
+backend/.venv/
+backend/venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+.hypothesis/
+
+# --- Node / frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.tsbuildinfo
+
+# --- SQLite (local dev DB; regenerate with scripts/load_database.py) ---
+backend/shopsphere.db
+backend/shopsphere.db-wal
+backend/shopsphere.db-shm
+backend/shopsphere.db-journal
+*.db-wal
+*.db-shm
+*.db-journal
+
+# --- Chroma / RAG index (regenerate with scripts/ingest_documents.py) ---
+chroma_data/
+backend/chroma_data/
+
+# --- ML / embedding caches (downloaded on first ingest) ---
+.cache/
+**/.cache/
+models/
+*.onnx
+
+# --- Generated data exports (source JSON in repo; exports optional) ---
+data/structured/*.parquet
+data/structured/*.csv
+
+# --- Local workflow / logs ---
+data/workflow_state/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Local E2E run reports (optional artifacts) ---
+docs/E2E_GEMINI_*.md
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Cursor (keep shared rules; ignore machine-local state) ---
+.cursor/projects/
+.cursor/terminals/
+.cursor/**/*.log
+
+# --- Docker local overrides ---
+docker-compose.override.yml
+
+# --- Misc ---
+*.bak
+*.tmp
+*.temp
