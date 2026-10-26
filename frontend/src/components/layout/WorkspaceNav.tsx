@@ -63,12 +63,10 @@ export function WorkspaceNav() {
           <MessageSquare className="size-4" strokeWidth={1.75} aria-hidden />
           Agent
         </NavLink>
-        {!focusedOps && (
-          <NavLink to="/workspace/data" className={({ isActive }) => navPill(isActive)}>
-            <Database className="size-4" strokeWidth={1.75} aria-hidden />
-            Data explorer
-          </NavLink>
-        )}
+        <NavLink to="/workspace/data" className={({ isActive }) => navPill(isActive)}>
+          <Database className="size-4" strokeWidth={1.75} aria-hidden />
+          Database
+        </NavLink>
       </nav>
     </header>
   )

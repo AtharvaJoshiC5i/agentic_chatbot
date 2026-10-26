@@ -330,6 +330,9 @@ export type DocumentPreviewSegment = {
 }
 
 export type DataBrowserOverview = {
+  database_url: string
+  database_file: string | null
+  database_file_exists: boolean
   structured_table_count: number
   structured_row_count: number
   document_count: number

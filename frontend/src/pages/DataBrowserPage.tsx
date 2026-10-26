@@ -25,6 +25,22 @@ export function DataBrowserPage() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600">
           Browse structured SQLite tables and unstructured documents indexed for the returns agent.
         </p>
+        {overview && !overview.database_file_exists && overview.structured_row_count === 0 && (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert">
+            No data loaded yet. From the repo root run{' '}
+            <code className="rounded bg-amber-100/80 px-1">python scripts/load_database.py</code>, then refresh
+            this page.
+          </p>
+        )}
+        {overview?.database_file && (
+          <p className="mt-3 text-xs text-stone-500">
+            SQLite file:{' '}
+            <code className="break-all rounded bg-stone-100 px-1 py-0.5 text-stone-700">
+              {overview.database_file}
+            </code>
+            {overview.database_file_exists ? '' : ' (file not found — run load_database.py)'}
+          </p>
+        )}
         {overview && (
           <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-stone-600">
             <div>

@@ -131,7 +131,7 @@ export function ChatSidebar({
               <Plus className="size-3.5" strokeWidth={2} aria-hidden />
               New conversation
             </button>
-            {queueHome ? (
+            {queueHome && (
               <Link
                 to="/workspace/dashboard"
                 className={`${button('secondary', 'sm')} w-full border-stone-200/90 bg-white/70 text-[13px]`}
@@ -139,15 +139,14 @@ export function ChatSidebar({
                 <Inbox className="size-3.5 text-stone-500" strokeWidth={1.75} aria-hidden />
                 {isWarehouse ? 'Inspection queue' : isSupervisor ? 'Approvals queue' : 'Returns queue'}
               </Link>
-            ) : (
-              <Link
-                to="/workspace/data"
-                className={`${button('secondary', 'sm')} w-full border-stone-200/90 bg-white/70 text-[13px]`}
-              >
-                <Database className="size-3.5 text-stone-500" strokeWidth={1.75} aria-hidden />
-                Data explorer
-              </Link>
             )}
+            <Link
+              to="/workspace/data"
+              className={`${button('secondary', 'sm')} w-full border-stone-200/90 bg-white/70 text-[13px]`}
+            >
+              <Database className="size-3.5 text-stone-500" strokeWidth={1.75} aria-hidden />
+              Database
+            </Link>
 
             <div className="relative">
               <label htmlFor="sidebar-return-search" className="sr-only">

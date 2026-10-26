@@ -37,6 +37,8 @@ def test_data_browser_lists_tables_and_documents(populated_db) -> None:
     body = overview.json()
     assert body["structured_table_count"] >= 5
     assert body["document_count"] >= 0
+    assert body["database_file_exists"] is True
+    assert body.get("database_file")
 
     tables = client.get("/api/data-browser/tables", headers=headers).json()["tables"]
     assert any(t["name"] == "returns" for t in tables)

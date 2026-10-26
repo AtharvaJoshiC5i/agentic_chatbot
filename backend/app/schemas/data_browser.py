@@ -8,6 +8,9 @@ class DataBrowserOverview(BaseModel):
     structured_row_count: int
     document_count: int
     document_types: list[str] = Field(default_factory=list)
+    database_url: str
+    database_file: str | None = None
+    database_file_exists: bool = False
 
 
 class StructuredTableSummary(BaseModel):

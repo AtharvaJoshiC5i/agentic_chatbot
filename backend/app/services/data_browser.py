@@ -10,6 +10,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database.base import Base
 from app.models.tables import DocumentMetadata
 
@@ -177,11 +178,16 @@ def get_overview(session: Session) -> dict[str, Any]:
         .group_by(DocumentMetadata.document_type)
         .order_by(DocumentMetadata.document_type)
     ).all()
+    settings = get_settings()
+    db_path = settings.sqlite_database_path
     return {
         "structured_table_count": len(tables),
         "structured_row_count": structured_row_count,
         "document_count": int(doc_total),
         "document_types": [row[0] for row in type_rows],
+        "database_url": settings.database_url,
+        "database_file": str(db_path) if db_path is not None else None,
+        "database_file_exists": bool(db_path and db_path.is_file()),
     }
 
 
