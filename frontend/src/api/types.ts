@@ -180,6 +180,13 @@ export type WorkspaceQueueItem = {
   notification_id?: number | null
   warehouse_verdict?: string | { recommendation?: string; notes?: string | null; resolution_type?: string } | null
   warehouse_notes?: string | null
+  workflow_timeline?: Array<{
+    event_id: number
+    event_type: string
+    event_timestamp: string
+    description: string
+    source_type: string
+  }>
 }
 
 export type CustomerNotificationOut = {
@@ -262,8 +269,10 @@ export type RecoveryRecommendationOut = {
   ranked_options: RankedRecoveryOptionOut[]
 }
 
+export type LlmProviderId = 'groq' | 'gemini' | 'nvidia'
+
 export type LlmProviderOption = {
-  id: string
+  id: LlmProviderId
   label: string
   configured: boolean
   model: string

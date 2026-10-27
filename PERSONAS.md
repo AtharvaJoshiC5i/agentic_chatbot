@@ -27,9 +27,9 @@ No persona can “make up” return facts. If the data is missing, the agent sho
 | Persona | What they do in this story |
 |---------|----------------------------|
 | **Customer support** | Explains to the customer that verification is in progress; does **not** open a formal case. |
-| **Returns analyst** | Runs investigation, opens **investigation case**, requests evidence; submits **refund request** only if policy allows (does not pay out). |
-| **Warehouse manager** | Summarizes **inspection PDFs** and physical findings; may create a **repair/recovery** task later—not refunds. |
-| **Returns supervisor** | Assigns the case, **approves** refund actions, **executes payout** when appropriate, clears the queue. |
+| **Returns analyst** | Checks policy first; rejects clear policy failures with a message draft, or opens an inspection case automatically assigned to warehouse. Submits a supported refund/replacement request after the warehouse verdict. |
+| **Warehouse manager** | Confirms physical receipt, inspects the unit, and records whether the requested resolution is feasible. |
+| **Returns supervisor** | Reviews the full timeline, inspection, and warehouse verdict; approves or rejects the refund/replacement request. |
 | **Administrator** | Can run the full demo path (same powers as supervisor for operations). |
 
 Same return, different jobs—like a relay race, not five separate apps.
@@ -68,7 +68,7 @@ Can we refund R106 again? Explain why we must not submit another refund.
 
 **Who they are:** Investigators for tricky or risky returns (mismatch, policy edge cases, conflicting docs).
 
-**Superpower:** Everything support can do for reads **plus** **create investigation cases** and **submit refund requests** with evidence.
+**Superpower:** Checks policy and case evidence, rejects definite policy failures, opens inspection cases for eligible returns, and submits supported requests after warehouse review.
 
 **Cannot:** Assign cases to people, approve/execute refunds, or create recovery tasks.
 
@@ -94,7 +94,7 @@ Investigate R110 and explain any conflicting inspection findings.
 
 **Who they are:** People who touch the **physical product**—inspections, repair, refurb, quarantine, disposal.
 
-**Superpower:** Read investigations and **recovery recommendations**; **create recovery/repair tasks** (often after supervisor approval on the action).
+**Superpower:** Receives automatically assigned inspection cases, records receipt only after the unit physically arrives, performs inspection, and returns a feasibility verdict to the analyst.
 
 **Cannot:** Request or approve refunds, open investigation cases, or assign analysts.
 
@@ -120,7 +120,7 @@ Is R115 safe to refurbish or resell? Recommend disposal or recycle if needed.
 
 **Who they are:** Queue owner and **approval authority** for money and gated actions.
 
-**Superpower:** Analyst capabilities **plus** assign cases, **approve** action requests, **execute payout** on refunds, recovery task oversight, monitoring/timeline admin APIs.
+**Superpower:** Reviews pending refund/replacement requests with the full return timeline and inspection evidence, then approves or rejects. The demo ledger does not transfer money.
 
 **Cannot:** Nothing important is withheld in the demo—they are the operational “decision desk.”
 
@@ -173,7 +173,7 @@ Summarize system health: open alerts, pending refunds, and cases without assigne
 | Customer-style explanations | **Best fit** | ✓ | ✓ | ✓ | ✓ |
 | Create investigation case | — | **✓** | — | ✓ | ✓ |
 | Submit refund **request** | ✓ | ✓ | — | ✓ | ✓ |
-| Approve + **execute payout** | — | — | — | **✓** | ✓ |
+| Approve / reject refund and replacement requests | — | — | — | **✓** | ✓ |
 | Create recovery / repair task | — | — | **✓** | ✓ | ✓ |
 | Assign cases | — | — | — | **✓** | ✓ |
 | Monitoring / timeline admin | — | — | — | **✓** | ✓ |
@@ -187,7 +187,7 @@ Summarize system health: open alerts, pending refunds, and cases without assigne
 | “Support and analyst feel the same.” | Both can **request** refunds; only **analyst** opens **cases** for deep investigations. |
 | “Supervisor and admin are identical.” | In this demo, **yes for day-to-day refunds**; admin is for **full-pipeline and health** demos. |
 | “Warehouse can fix refunds by repairing the item.” | Recovery **does not** replace a refund; different ledger, different actions. |
-| “If the agent says ‘executed,’ the customer was paid.” | Check **Refund ledger → completed**. See [REFUND_PERSONA_FLOW.md](REFUND_PERSONA_FLOW.md). |
+| “If the refund ledger says completed, money was transferred.” | This demo records ledger status only; no payment provider is connected. Customer message drafts are not delivered because no mail server is configured. |
 
 ---
 

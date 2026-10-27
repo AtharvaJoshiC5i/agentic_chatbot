@@ -297,6 +297,7 @@ class WorkspaceQueueItem(BaseModel):
     warehouse_notes: str | None = None
     latest_inspection: dict | None = None
     case: dict | None = None
+    workflow_timeline: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class WorkspaceDashboardSection(BaseModel):

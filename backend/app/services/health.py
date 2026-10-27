@@ -144,10 +144,12 @@ def _check_chroma(settings: Settings) -> DependencyHealth:
 def _check_llm(settings: Settings) -> DependencyHealth:
     from app.llm.gemini import GEMINI_MODEL, is_gemini_configured
     from app.llm.groq import is_groq_configured
+    from app.llm.nvidia import is_nvidia_configured
 
     groq_ok = is_groq_configured()
     gemini_ok = is_gemini_configured()
-    if groq_ok or gemini_ok:
+    nvidia_ok = is_nvidia_configured()
+    if groq_ok or gemini_ok or nvidia_ok:
         return DependencyHealth(
             name="llm",
             status=DependencyStatus.OK,
@@ -156,16 +158,18 @@ def _check_llm(settings: Settings) -> DependencyHealth:
                 "default_provider": settings.llm_provider,
                 "groq": {"configured": groq_ok, "model": settings.groq_model},
                 "gemini": {"configured": gemini_ok, "model": GEMINI_MODEL},
+                "nvidia": {"configured": nvidia_ok, "model": settings.nvidia_model},
             },
         )
     return DependencyHealth(
         name="llm",
         status=DependencyStatus.NOT_READY,
-        detail="No LLM configured (set GROQ_API_KEY or GEMINI_API_KEY).",
+        detail="No LLM configured (set GROQ_API_KEY, GEMINI_API_KEY, or NVIDIA_API_KEY).",
         metadata={
             "default_provider": settings.llm_provider or None,
             "groq": {"configured": False, "model": settings.groq_model},
             "gemini": {"configured": False, "model": GEMINI_MODEL},
+            "nvidia": {"configured": False, "model": settings.nvidia_model},
         },
     )
 

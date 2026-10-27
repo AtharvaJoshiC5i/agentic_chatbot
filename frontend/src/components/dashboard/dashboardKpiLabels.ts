@@ -9,7 +9,7 @@ const LABELS: Record<WorkspaceDashboardOut['persona'], Record<string, string>> =
     awaiting_warehouse: 'With warehouse',
     ready_for_supervisor: 'Ready to submit',
     pending_supervisor: 'With supervisor',
-    customer_follow_up: 'Email customer',
+    customer_follow_up: 'Confirm customer message',
   },
   warehouse_manager: {
     queue_total: 'In your queue',

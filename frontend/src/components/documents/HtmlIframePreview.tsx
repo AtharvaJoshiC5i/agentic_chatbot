@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { focusDocumentPassage } from '../../lib/focusDocumentPassage'
 
-export function HtmlIframePreview({ html, title }: { html: string; title: string }) {
+export function HtmlIframePreview({ html, title, passage }: { html: string; title: string; passage?: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const blobUrl = useMemo(() => {
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
@@ -27,6 +28,7 @@ export function HtmlIframePreview({ html, title }: { html: string; title: string
           480,
         )
         el.style.height = `${height + 8}px`
+        if (passage && doc.body) focusDocumentPassage(doc.body, passage)
       } catch {
         el.style.height = '640px'
       }
@@ -34,14 +36,14 @@ export function HtmlIframePreview({ html, title }: { html: string; title: string
 
     iframe.addEventListener('load', resize)
     return () => iframe.removeEventListener('load', resize)
-  }, [blobUrl])
+  }, [blobUrl, passage])
 
   return (
     <iframe
       ref={iframeRef}
       title={title}
       src={blobUrl}
-      sandbox=""
+      sandbox="allow-same-origin"
       className="w-full min-h-[480px] border-0 bg-zinc-100"
     />
   )

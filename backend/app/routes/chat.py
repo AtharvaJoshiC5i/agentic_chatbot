@@ -37,7 +37,7 @@ def post_chat(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
                 f"LLM provider '{provider}' is not configured. "
-                "Set GROQ_API_KEY / GROQ_MODEL or GEMINI_API_KEY in .env"
+                "Set GROQ_API_KEY / GROQ_MODEL, GEMINI_API_KEY, or NVIDIA_API_KEY in .env"
             ),
         )
 

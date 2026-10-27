@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from app.models.enums import InspectionResult, IssueType, ProductCondition, UserRole
 from app.security.deps import CurrentUser
+from app.models.tables import Inspection
+from sqlalchemy import select
 from app.services.cases import create_case, get_active_case
 from app.services.handoff import get_latest_verdict, record_verdict
 from app.services.inspections import record_inspection
@@ -19,7 +21,10 @@ def prepare_for_submission(db, return_id: str) -> None:
     if get_active_case(db, return_id) is None:
         create_case(db, return_id=return_id, issue_type=IssueType.GENERAL, priority="medium", actor=ANALYST)
     receive_return_at_warehouse(db, return_id, WAREHOUSE)
-    if get_warehouse_handoff_status(db, return_id)["inspection_count"] == 0:
+    latest_inspection = db.execute(
+        select(Inspection).where(Inspection.return_id == return_id).order_by(Inspection.inspection_id.desc()).limit(1)
+    ).scalar_one_or_none()
+    if latest_inspection is None or latest_inspection.inspection_result != InspectionResult.PASS.value:
         record_inspection(
             db,
             return_id=return_id,

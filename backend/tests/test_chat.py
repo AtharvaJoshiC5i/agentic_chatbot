@@ -111,6 +111,6 @@ def test_llm_providers_endpoint(populated_db, monkeypatch) -> None:
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["default_provider"] in {"groq", "gemini"}
+    assert body["default_provider"] in {"groq", "gemini", "nvidia"}
     ids = {p["id"] for p in body["providers"]}
-    assert ids == {"groq", "gemini"}
+    assert ids == {"groq", "gemini", "nvidia"}

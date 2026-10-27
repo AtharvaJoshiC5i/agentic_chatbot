@@ -8,7 +8,7 @@ from app.models.tables import Inspection, OrderItem, Return
 from app.security.deps import CurrentUser
 from app.services.audit import record_audit
 from app.services.return_events import record_return_event
-from app.services.return_status import ReturnStatusError, on_inspection_recorded, receive_return_at_warehouse
+from app.services.return_status import ReturnStatusError, on_inspection_recorded
 
 
 class InspectionServiceError(Exception):
@@ -33,22 +33,20 @@ def record_inspection(
     if return_row is None:
         raise InspectionServiceError("Return not found", "not_found")
 
-    if return_row.return_status != ReturnStatus.RECEIVED.value:
-        if return_row.received_date is None:
-            try:
-                receive_return_at_warehouse(session, return_id, actor)
-                return_row = session.get(Return, return_id)
-            except ReturnStatusError as exc:
-                raise InspectionServiceError(str(exc), exc.code) from exc
-        elif return_row.return_status not in (
-            ReturnStatus.RECEIVED.value,
-            ReturnStatus.INSPECTING.value,
-            ReturnStatus.INVESTIGATING.value,
-        ):
-            raise InspectionServiceError(
-                "Return must be received at warehouse before inspection.",
-                "not_received",
-            )
+    if return_row.received_date is None:
+        raise InspectionServiceError(
+            "Record warehouse receipt after confirming physical arrival before inspection.",
+            "not_received",
+        )
+    if return_row.return_status not in (
+        ReturnStatus.RECEIVED.value,
+        ReturnStatus.INSPECTING.value,
+        ReturnStatus.INVESTIGATING.value,
+    ):
+        raise InspectionServiceError(
+            "Return must be in a received warehouse status before inspection.",
+            "not_received",
+        )
 
     item = session.get(OrderItem, return_row.order_item_id)
     purchased = item.purchased_serial_number if item else None

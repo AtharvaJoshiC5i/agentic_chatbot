@@ -32,7 +32,7 @@ def test_duplicate_case_raises_when_disabled(populated_db) -> None:
     actor = CurrentUser(user_id=1, username="analyst2", role=UserRole.RETURNS_ANALYST)
     create_case(
         populated_db,
-        return_id="R103",
+        return_id="R102",
         issue_type=IssueType.POLICY_EXCEPTION,
         priority="medium",
         actor=actor,
@@ -40,7 +40,7 @@ def test_duplicate_case_raises_when_disabled(populated_db) -> None:
     try:
         create_case(
             populated_db,
-            return_id="R103",
+            return_id="R102",
             issue_type=IssueType.GENERAL,
             priority="low",
             actor=actor,

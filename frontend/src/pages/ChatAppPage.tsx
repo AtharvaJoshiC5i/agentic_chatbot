@@ -201,7 +201,7 @@ export function ChatAppPage() {
           message: trimmed,
           return_id: effectiveReturn,
           history: historyForApi.slice(-12),
-          llm_provider: selectedProvider as 'groq' | 'gemini',
+          llm_provider: selectedProvider as 'groq' | 'gemini' | 'nvidia',
         },
         {
           onStep: (step) => setLiveAgentSteps((prev) => upsertAgentStep(prev, step)),

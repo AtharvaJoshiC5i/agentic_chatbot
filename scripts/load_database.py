@@ -15,6 +15,7 @@ def main() -> int:
 
     from app.config import get_settings
     from app.database.session import get_session_maker
+    from app.documents.loader import load_document_metadata_from_manifest
     from app.synthetic.generator import generate_synthetic_data
     from app.synthetic.ground_truth import write_ground_truth_files
     from app.synthetic.loader import load_bundle
@@ -30,6 +31,7 @@ def main() -> int:
     try:
         load_bundle(session, bundle)
         report = validate_loaded_database(session)
+        document_report = load_document_metadata_from_manifest(session)
     finally:
         session.close()
 
@@ -39,11 +41,22 @@ def main() -> int:
             print(f"  - {error}", file=sys.stderr)
         return 1
 
+    if not document_report.ok:
+        print("Document metadata load failed:", file=sys.stderr)
+        for path in document_report.missing_files:
+            print(f"  missing file: {path}", file=sys.stderr)
+        for return_id in document_report.invalid_return_ids:
+            print(f"  invalid return_id: {return_id}", file=sys.stderr)
+        for product_id in document_report.invalid_product_ids:
+            print(f"  invalid product_id: {product_id}", file=sys.stderr)
+        return 1
+
     for warning in report.warnings:
         print(f"Warning: {warning}")
 
     print(f"Loaded structured data into {settings.sqlite_database_path}")
     print(f"Returns: {len(bundle.returns)} | Inspections: {len(bundle.inspections)} | Refunds: {len(bundle.refunds)}")
+    print(f"Documents: {document_report.rows_inserted}")
     return 0
 
 

@@ -26,7 +26,7 @@ function suggestedPrompt(row: WorkspaceQueueItem): string {
     return (
       `Use get_warehouse_handoff_status for ${rid} first. ` +
       `Analyst case #${row.case_id}; customer requested ${resolution}. ` +
-      'There is no inspection on file yet. Record warehouse receipt when the unit arrives, then record inspection. ' +
+      'There is no receipt or inspection recorded yet. Do not record receipt just because a case was opened. Ask whether the physical unit is present; only after explicit confirmation record receipt, then inspection. ' +
       'Do not say there is no open case. Do not approve refund or replacement.'
     )
   }
@@ -39,7 +39,7 @@ function suggestedPrompt(row: WorkspaceQueueItem): string {
   }
   return (
     `Use get_warehouse_handoff_status for ${rid} first. ` +
-    `Customer requested ${resolution}. Unit should be received — record inspection if not done yet. ` +
+    `Customer requested ${resolution}. Check the recorded receipt first; do not infer physical arrival from return status or case handoff. If not received, ask before recording receipt or inspection. ` +
     'Summarize handoff status and inspection findings for the analyst. Do not approve refund or replacement.'
   )
 }

@@ -39,7 +39,7 @@
     "title": "Already refunded",
     "expected_investigation_outcome": "eligible_for_standard_resolution",
     "expected_signal": "no_inconsistency_detected",
-    "notes": "Completed refund exists; duplicate payout blocked at API. Signal duplicate only when an open refund row exists."
+    "notes": "Completed refund at rest; duplicate payout blocked when a new open refund exists."
   },
   "R107": {
     "scenario": "repeated_inconsistencies",

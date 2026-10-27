@@ -34,7 +34,6 @@ from app.services.evidence_requests import EvidenceRequestError, create_evidence
 from app.services.inventory import InventoryServiceError, reserve_disposition
 from app.services.recovery import RecoveryServiceError, create_recovery_task
 from app.services.refunds import RefundServiceError, approve_refund, execute_refund, request_refund
-from app.services.return_status import REFUND_AUTO_PAYOUT_MAX_PAISE
 from app.services.replacements import ReplacementServiceError, create_replacement_request
 from app.services.return_events import record_return_event
 from app.services.warranty import WarrantyServiceError, create_warranty_claim
@@ -63,38 +62,6 @@ def _reject_if_approval_expired(session: Session, action: ActionRequest) -> None
     action.execution_status = ExecutionStatus.REJECTED.value
     session.commit()
     raise ActionServiceError("Approval has expired.", "approval_expired")
-
-
-def _try_complete_refund_request(
-    session: Session,
-    action: ActionRequest,
-    actor: CurrentUser,
-) -> None:
-    """After supervisor approves a refund request action, approve and pay out when allowed."""
-    payload = _payload_dict(action)
-    raw_id = payload.get("refund_id")
-    if raw_id is None:
-        return
-    refund = session.get(Refund, int(raw_id))
-    if refund is None:
-        return
-    if refund.refund_status == RefundStatus.COMPLETED.value:
-        action.execution_status = ExecutionStatus.SUCCEEDED.value
-        action.executed_at = utc_now()
-        return
-    if refund.refund_amount > REFUND_AUTO_PAYOUT_MAX_PAISE:
-        if refund.approval_status != ApprovalStatus.APPROVED.value:
-            approve_refund(session, refund.refund_id, actor, approve=True)
-        action.execution_status = ExecutionStatus.APPROVED.value
-        return
-    if refund.approval_status != ApprovalStatus.APPROVED.value:
-        approve_refund(session, refund.refund_id, actor, approve=True)
-    if refund.refund_status != RefundStatus.COMPLETED.value:
-        execute_refund(session, refund.refund_id, actor)
-    action.execution_status = ExecutionStatus.SUCCEEDED.value
-    action.executed_at = utc_now()
-    payload = {**payload, "refund_id": refund.refund_id, "refund_status": RefundStatus.COMPLETED.value}
-    action.payload_json = json.dumps(payload)
 
 
 def _payload_dict(action: ActionRequest) -> dict[str, Any]:
@@ -244,23 +211,10 @@ def submit_action(
         evidence_references={"action_type": action_type.value, "return_id": return_id, **payload},
     )
 
-    if action_type == ActionType.REQUEST_REFUND and needs_approval:
-        session.commit()
-        refund = request_refund(
-            session,
-            return_id=return_id or str(payload.get("return_id")),
-            refund_amount_paise=int(payload["refund_amount_paise"]),
-            idempotency_key=str(payload.get("refund_idempotency_key", idempotency_key)),
-            actor=actor,
-        )
-        merged = {
-            **payload,
-            "refund_id": refund.refund_id,
-            "refund_status": refund.refund_status,
-        }
-        action.payload_json = json.dumps(merged)
-        session.add(action)
-        session.commit()
+    # This wrapper records submission only. The linked Refund is the approval gate,
+    # so create it even when callers disable generic action auto-execution.
+    if action_type == ActionType.REQUEST_REFUND:
+        _execute_action_body(session, action, actor, actor_type=actor_type)
     elif not needs_approval and auto_execute:
         _execute_action_body(session, action, actor, actor_type=actor_type)
     else:
@@ -279,6 +233,8 @@ def approve_action(
     action = session.get(ActionRequest, action_id)
     if action is None:
         raise ActionServiceError("Action not found", "not_found")
+    if action.action_type == ActionType.REQUEST_REFUND.value:
+        raise ActionServiceError("Refund decisions must be made on the linked refund request.", "refund_record_required")
     if not action.approval_required:
         raise ActionServiceError("Action does not require approval")
     if action.approval_status != ApprovalStatus.PENDING.value:
@@ -307,8 +263,6 @@ def approve_action(
         target_id=str(action.action_id),
         execution_result=result,
     )
-    if approve and action.action_type == ActionType.REQUEST_REFUND.value:
-        _try_complete_refund_request(session, action, actor)
     session.commit()
     session.refresh(action)
     if (
@@ -385,8 +339,6 @@ def _execute_action_body(
                 refund = session.get(Refund, int(existing_id))
                 if refund is None:
                     raise ActionServiceError("Linked refund not found", "not_found")
-                if refund.refund_status != RefundStatus.COMPLETED.value:
-                    _try_complete_refund_request(session, action, actor)
             else:
                 refund = request_refund(
                     session,
@@ -395,15 +347,13 @@ def _execute_action_body(
                     idempotency_key=str(payload.get("refund_idempotency_key", action.idempotency_key)),
                     actor=actor,
                 )
-                _try_complete_refund_request(session, action, actor)
-            refund = session.get(Refund, int(_payload_dict(action).get("refund_id", refund.refund_id)))
-            if refund:
-                payload = {
-                    **payload,
-                    "refund_id": refund.refund_id,
-                    "refund_status": refund.refund_status,
-                }
-                action.payload_json = json.dumps(payload)
+            payload = {
+                **payload,
+                "refund_id": refund.refund_id,
+                "refund_status": refund.refund_status,
+                "refund_approval_status": refund.approval_status,
+            }
+            action.payload_json = json.dumps(payload)
         elif action_type == ActionType.EXECUTE_REFUND:
             refund_id = int(payload["refund_id"])
             execute_refund(session, refund_id, actor)

@@ -48,9 +48,9 @@ STAGE_LABELS: dict[str, str] = {
     "await_warehouse": "With warehouse (inspect and give verdict)",
     "submit_refund": "Warehouse approved: submit refund to supervisor",
     "submit_replacement": "Warehouse approved: submit replacement to supervisor",
-    "decline_request": "Warehouse declined: decline request and notify customer",
+    "decline_request": "Warehouse declined: decline request and review message",
     "await_supervisor": "Awaiting supervisor decision",
-    "customer_follow_up": "Confirm and send customer email",
+    "customer_follow_up": "Review and confirm customer message",
 }
 
 # Lower rank = needs the analyst sooner.

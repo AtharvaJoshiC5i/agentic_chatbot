@@ -11,10 +11,14 @@ export function DocumentNativePreview({
   documentId,
   fileKind,
   filename,
+  passage,
+  page,
 }: {
   documentId: number
   fileKind: string
   filename: string
+  passage?: string
+  page?: number | null
 }) {
   const kind = normalizeKind(fileKind)
   const blobUrlRef = useRef<string | null>(null)
@@ -75,7 +79,7 @@ export function DocumentNativePreview({
   }, [documentId, kind])
 
   if (kind === 'docx') {
-    return <DocxCanvasPreview documentId={documentId} filename={filename} />
+    return <DocxCanvasPreview documentId={documentId} filename={filename} passage={passage} />
   }
 
   if (loading) {
@@ -99,7 +103,7 @@ export function DocumentNativePreview({
       <div className="flex h-full min-h-[480px] flex-col bg-zinc-100">
         <iframe
           title={`PDF preview: ${filename}`}
-          src={pdfUrl}
+          src={page ? `${pdfUrl}#page=${page}` : pdfUrl}
           className="min-h-[480px] w-full flex-1 border-0 bg-white"
         />
       </div>
@@ -107,7 +111,7 @@ export function DocumentNativePreview({
   }
 
   if (htmlPreview) {
-    return <HtmlIframePreview html={htmlPreview} title={`Document preview: ${filename}`} />
+    return <HtmlIframePreview html={htmlPreview} title={`Document preview: ${filename}`} passage={passage} />
   }
 
   if (plainText != null) {

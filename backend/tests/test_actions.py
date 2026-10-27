@@ -100,7 +100,7 @@ def test_create_case_action_accepts_inspection_needed_alias(populated_db) -> Non
         headers=headers,
         json={
             "action_type": "create_case",
-            "return_id": "R103",
+            "return_id": "R101",
             "payload": {"issue_type": "inspection_needed", "priority": "medium"},
             "idempotency_key": "action-case-r103-alias-1",
         },
@@ -108,9 +108,32 @@ def test_create_case_action_accepts_inspection_needed_alias(populated_db) -> Non
     assert response.status_code == 201
     assert response.json()["execution_status"] == "succeeded"
     cases = client.get("/api/cases", headers=headers).json()["items"]
-    match = [c for c in cases if c["return_id"] == "R103"]
+    match = [c for c in cases if c["return_id"] == "R101"]
     assert match
     assert match[0]["issue_type"] == "missing_inspection"
+
+
+def test_out_of_policy_case_is_rejected_before_warehouse_handoff(populated_db) -> None:
+    _seed(populated_db, "act_policy_analyst", UserRole.RETURNS_ANALYST)
+    headers = _auth("act_policy_analyst")
+    response = client.post(
+        "/api/cases",
+        headers=headers,
+        json={"return_id": "R103", "issue_type": "policy_exception", "priority": "medium"},
+    )
+    assert response.status_code == 400
+    assert "outside" in response.json()["detail"].lower()
+    rejected = client.post(
+        "/api/returns/R103/decline",
+        headers=headers,
+        json={"reason": "The request is outside the published return window."},
+    )
+    assert rejected.status_code == 200, rejected.text
+    assert rejected.json()["return_status"] == "rejected"
+    policy_cases = [case for case in client.get("/api/cases", headers=headers).json()["items"] if case["return_id"] == "R103"]
+    assert len(policy_cases) == 1 and policy_cases[0]["case_status"] == "closed"
+    drafts = client.get("/api/notifications?status=draft&return_id=R103", headers=headers).json()["items"]
+    assert len(drafts) == 1 and "days after delivery" in drafts[0]["body"]
 
 
 def test_r106_refund_execute_action_fails(populated_db) -> None:
@@ -194,5 +217,6 @@ def test_agent_tool_submit_refund(populated_db) -> None:
         clear_agent_context()
     data = json.loads(raw)
     assert data.get("error") is None, data
-    assert data["approval_required"] is False  # the supervisor decides on the refund itself
-    assert data["execution_status"] == "succeeded"
+    assert data["refund_status"] == "requested"
+    assert data["approval_status"] == "pending"
+    assert "No payout" in data["next_step"]

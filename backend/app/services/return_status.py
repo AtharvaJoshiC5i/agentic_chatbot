@@ -48,6 +48,17 @@ _RESOLVED_FROM = frozenset(
     }
 )
 _CLOSED_FROM = frozenset({ReturnStatus.RESOLVED.value, ReturnStatus.REJECTED.value})
+_POLICY_REJECTION_FROM = frozenset(
+    {
+        ReturnStatus.REQUESTED.value,
+        ReturnStatus.APPROVED.value,
+        ReturnStatus.PICKUP_SCHEDULED.value,
+        ReturnStatus.IN_TRANSIT.value,
+        ReturnStatus.RECEIVED.value,
+        ReturnStatus.INSPECTING.value,
+        ReturnStatus.INVESTIGATING.value,
+    }
+)
 
 
 def _set_status(
@@ -140,8 +151,28 @@ def receive_return_at_warehouse(
             ReturnStatus.INVESTIGATING.value,
         ):
             if row.received_date is None:
-                row.received_date = utc_now()
-                session.flush()
+                now = utc_now()
+                row.received_date = now
+                record_return_event(
+                    session,
+                    return_id=return_id,
+                    event_type="warehouse_received",
+                    description="Warehouse receipt recorded after physical arrival confirmation.",
+                    source_type=SourceType.SYSTEM.value,
+                    source_id=f"return:{return_id}:received",
+                    event_timestamp=now,
+                )
+                record_audit(
+                    session,
+                    actor=actor,
+                    actor_type=ActorType.USER,
+                    action_type="record_warehouse_receipt",
+                    target_entity="return",
+                    target_id=return_id,
+                    execution_result="succeeded",
+                )
+                session.commit()
+                session.refresh(row)
             return row
         raise ReturnStatusError(
             f"Cannot receive return from status {row.return_status}",
@@ -280,6 +311,24 @@ def on_declined(session: Session, return_id: str, reason: str, actor: CurrentUse
         description=f"Request declined by {actor.username}: {reason}",
         event_type="other",
         source_id=f"return:{return_id}:declined",
+    )
+
+
+def on_policy_declined(session: Session, return_id: str, reason: str, actor: CurrentUser) -> None:
+    """Reject a return before warehouse handoff when policy data proves it is ineligible."""
+    row = session.get(Return, return_id)
+    if row is None:
+        return
+    if row.return_status not in _POLICY_REJECTION_FROM:
+        raise ReturnStatusError(f"Cannot reject a return in status {row.return_status}", "invalid_transition")
+    _set_status(
+        session,
+        row,
+        ReturnStatus.REJECTED.value,
+        actor=actor,
+        description=f"Return rejected at analyst policy review: {reason}",
+        event_type="other",
+        source_id=f"return:{return_id}:policy_rejected",
     )
 
 

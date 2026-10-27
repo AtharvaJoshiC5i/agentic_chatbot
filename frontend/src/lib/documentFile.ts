@@ -22,9 +22,9 @@ export async function fetchDocumentHtmlPreview(documentId: number): Promise<stri
   return res.text()
 }
 
-export async function openDocumentInNewTab(documentId: number): Promise<void> {
+export async function openDocumentInNewTab(documentId: number, page?: number): Promise<void> {
   const blob = await fetchDocumentBlob(documentId)
   const url = URL.createObjectURL(blob)
-  window.open(url, '_blank', 'noopener,noreferrer')
+  window.open(page ? `${url}#page=${page}` : url, '_blank', 'noopener,noreferrer')
   window.setTimeout(() => URL.revokeObjectURL(url), 120_000)
 }

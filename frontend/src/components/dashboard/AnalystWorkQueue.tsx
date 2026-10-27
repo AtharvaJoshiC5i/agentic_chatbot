@@ -13,7 +13,7 @@ const STAGE_FILTERS: { id: string; label: string; match: (s: string) => boolean 
   { id: 'decline', label: 'To decline', match: (s) => s === 'decline_request' },
   { id: 'submit', label: 'Submit to supervisor', match: (s) => s === 'submit_refund' || s === 'submit_replacement' },
   { id: 'supervisor', label: 'Supervisor', match: (s) => s === 'await_supervisor' },
-  { id: 'customer', label: 'Customer email', match: (s) => s === 'customer_follow_up' },
+  { id: 'customer', label: 'Customer message', match: (s) => s === 'customer_follow_up' },
 ]
 
 function stageTone(stage: string | null | undefined): 'accent' | 'warning' | 'neutral' | 'danger' {
@@ -40,9 +40,7 @@ function suggestedPrompt(stage: string | undefined, resolution: string | null | 
   switch (stage) {
     case 'investigate':
       return (
-        'Investigate this return with evidence (policy, order, customer request). ' +
-        'If the claim matches our records, open an investigation case to send it to warehouse. ' +
-        'Do not submit refund or replacement yet.'
+        'Run the investigation and check the applicable company policy before any handoff. If a definite policy rule fails, explain the evidence and decline the return with the policy basis; do not send it to warehouse. If eligible, open a warehouse inspection case; if the data is incomplete or inconsistent, identify what is missing. Do not submit refund or replacement yet.'
       )
     case 'await_warehouse':
       return (
@@ -70,7 +68,7 @@ function suggestedPrompt(stage: string | undefined, resolution: string | null | 
     case 'customer_follow_up':
       return (
         'Call list_customer_notifications for this return and show me the drafted customer email. ' +
-        'After I confirm, send it with send_customer_notification so the case closes.'
+        'After I confirm, record the message confirmation with send_customer_notification so the case closes. This demo does not deliver email.'
       )
     default:
       return 'Summarize this return and the next step in the analyst workflow.'
@@ -94,7 +92,7 @@ export function AnalystWorkQueue({ data, onRefresh }: { data: WorkspaceDashboard
             Return requests
           </h2>
           <p className="mt-0.5 text-xs text-stone-500">
-            Investigate → open case → warehouse inspects → submit refund or replacement → email customer.
+            Investigate → open case → warehouse inspects → submit refund or replacement → confirm customer message.
           </p>
         </div>
       </div>
@@ -179,7 +177,7 @@ function QueueRow({ row, onRefresh }: { row: WorkspaceQueueItem; onRefresh: () =
             )}
             {stage === 'customer_follow_up' && row.notification_id != null && (
               <button type="button" className={button('secondary', 'sm')} onClick={() => setOpen((v) => !v)}>
-                Review email
+                Review message
               </button>
             )}
             <Link to={agentHref(rid, stage)} state={{ draftMessage: prompt }} className={button('primary', 'sm')}>

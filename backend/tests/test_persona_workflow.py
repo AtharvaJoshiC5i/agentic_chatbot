@@ -15,6 +15,7 @@ from app.main import app
 from app.models.enums import UserRole
 from app.models.tables import User
 from app.security.passwords import hash_password
+from app.investigation.investigation import run_investigation
 
 client = TestClient(app)
 _counter = itertools.count(1)
@@ -39,7 +40,7 @@ def _personas(db) -> dict[str, dict[str, str]]:
 
 def _pick(db, resolution: str, statuses: tuple[str, ...]) -> str:
     marks = ",".join(f"'{s}'" for s in statuses)
-    row = db.execute(
+    rows = db.execute(
         text(
             f"""SELECT r.return_id FROM returns r
                 WHERE r.requested_resolution = :res AND r.return_status IN ({marks}) AND r.return_id > 'R115'
@@ -47,12 +48,15 @@ def _pick(db, resolution: str, statuses: tuple[str, ...]) -> str:
                 AND NOT EXISTS (SELECT 1 FROM refunds f WHERE f.return_id = r.return_id)
                 AND NOT EXISTS (SELECT 1 FROM investigation_cases k WHERE k.return_id = r.return_id)
                 AND NOT EXISTS (SELECT 1 FROM replacement_requests p WHERE p.return_id = r.return_id)
-                ORDER BY r.return_id LIMIT 1"""
+                ORDER BY r.return_id LIMIT 100"""
         ),
         {"res": resolution},
-    ).first()
-    assert row is not None, f"no clean {resolution} return in the dataset"
-    return row[0]
+    ).all()
+    for row in rows:
+        report = run_investigation(db, row[0])
+        if report and report.f3_policy.within_return_window is True:
+            return row[0]
+    raise AssertionError(f"no clean, policy-eligible {resolution} return in the dataset")
 
 
 def _price(db, return_id: str) -> int:
@@ -76,6 +80,8 @@ def _hand_to_warehouse_and_back(db, p, rid: str, *, feasible: bool = True, notes
     """Analyst opens the case; warehouse receives, inspects and gives a verdict."""
     assert client.post("/api/cases", headers=p["analyst"], json={"return_id": rid, "issue_type": "general", "priority": "medium"}).status_code == 201
     assert _row(db, "SELECT return_status FROM returns WHERE return_id=:r", r=rid)[0] in ("investigating", "requested", "approved", "pickup_scheduled", "in_transit")
+    assignment = _row(db, "SELECT case_status, assigned_to FROM investigation_cases WHERE return_id=:r", r=rid)
+    assert assignment[0] == "assigned" and assignment[1] == "wf_warehouse"
     assert _queue_ids(p["warehouse"]).get(rid) in ("receive", "inspect")  # the warehouse sees it
 
     assert client.post(f"/api/returns/{rid}/receive", headers=p["warehouse"]).status_code == 200
@@ -86,7 +92,7 @@ def _hand_to_warehouse_and_back(db, p, rid: str, *, feasible: bool = True, notes
     )
     assert ins.status_code == 201, ins.text
     case = _row(db, "SELECT case_status, assigned_to FROM investigation_cases WHERE return_id=:r ORDER BY case_id DESC", r=rid)
-    assert case[0] == "in_progress" and case[1] == "wf_warehouse"  # warehouse picked the case up
+    assert case[0] == "in_progress" and case[1] == "wf_warehouse"  # assigned on opening; warehouse started work
     assert _queue_ids(p["warehouse"]).get(rid) == "verdict"
 
     verdict = client.post(
@@ -111,11 +117,19 @@ def test_refund_approved_path(populated_db) -> None:
     assert client.post("/api/cases", headers=p["analyst"], json={"return_id": rid, "issue_type": "general", "priority": "medium"}).status_code == 201
     still = client.post("/api/refunds/requests", headers=p["analyst"], json={"return_id": rid, "refund_amount_paise": amount, "idempotency_key": "wf-early-0002"})
     assert still.status_code == 409 and "warehouse" in still.json()["detail"].lower()
-    db.execute(text("DELETE FROM investigation_cases WHERE return_id=:r"), {"r": rid})
-    db.execute(text("UPDATE returns SET return_status='received' WHERE return_id=:r"), {"r": rid})
-    db.commit()
-
-    _hand_to_warehouse_and_back(db, p, rid)
+    assert client.post(f"/api/returns/{rid}/receive", headers=p["warehouse"]).status_code == 200
+    inspection = client.post(
+        f"/api/returns/{rid}/inspections",
+        headers=p["warehouse"],
+        json={"product_condition": "damaged", "accessories_complete": True, "defect_verified": True, "inspection_result": "pass", "inspector_notes": "bench test"},
+    )
+    assert inspection.status_code == 201, inspection.text
+    verdict = client.post(
+        f"/api/returns/{rid}/verdict",
+        headers=p["warehouse"],
+        json={"feasible": True, "recommendation": "proceed", "notes": "Inspection passed."},
+    )
+    assert verdict.status_code == 201, verdict.text
     assert _queue_ids(p["analyst"]).get(rid) == "submit_refund"  # the analyst is told it is their move
 
     request = client.post("/api/refunds/requests", headers=p["analyst"], json={"return_id": rid, "refund_amount_paise": amount, "idempotency_key": "wf-approve-0001"})
@@ -124,6 +138,16 @@ def test_refund_approved_path(populated_db) -> None:
     assert _row(db, "SELECT case_status FROM investigation_cases WHERE return_id=:r ORDER BY case_id DESC", r=rid)[0] == "pending_approval"
     assert _queue_ids(p["analyst"]).get(rid) == "await_supervisor"
     assert any(i["return_id"] == rid for i in client.get("/api/approvals", headers=p["supervisor"]).json()["refunds"])
+    supervisor_workspace = client.get("/api/dashboard/workspace", headers=p["supervisor"]).json()
+    approval_item = next(
+        item
+        for section in supervisor_workspace["sections"] if section["key"] == "approval_queue"
+        for item in section["items"] if item["return_id"] == rid
+    )
+    timeline = [event["description"].lower() for event in approval_item["workflow_timeline"]]
+    assert any("policy screen" in event for event in timeline)
+    assert any("inspection" in event for event in timeline)
+    assert any("warehouse verdict" in event for event in timeline)
 
     # A second open request for the same return is refused.
     dup = client.post("/api/refunds/requests", headers=p["analyst"], json={"return_id": rid, "refund_amount_paise": amount, "idempotency_key": "wf-approve-0002"})
@@ -170,6 +194,12 @@ def test_warehouse_decline_stops_the_analyst_submitting(populated_db) -> None:
     rid = _pick(db, "refund", ("received",))
     assert client.post("/api/cases", headers=p["analyst"], json={"return_id": rid, "issue_type": "general", "priority": "medium"}).status_code == 201
     client.post(f"/api/returns/{rid}/inspections", headers=p["warehouse"], json={"product_condition": "open_box", "accessories_complete": True, "defect_verified": False, "inspection_result": "fail", "inspector_notes": "Fault not reproduced"})
+    failed_inspection = client.post(
+        f"/api/returns/{rid}/verdict",
+        headers=p["warehouse"],
+        json={"feasible": True, "recommendation": "proceed"},
+    )
+    assert failed_inspection.status_code == 400 and "latest inspection passed" in failed_inspection.json()["detail"].lower()
     assert client.post(f"/api/returns/{rid}/verdict", headers=p["warehouse"], json={"feasible": False, "recommendation": "decline"}).status_code == 400  # needs a reason
     assert client.post(f"/api/returns/{rid}/verdict", headers=p["warehouse"], json={"feasible": False, "recommendation": "decline", "notes": "Fault could not be reproduced in 60 minutes of testing."}).status_code == 201
 

@@ -4,7 +4,7 @@ R102,serial_mismatch,Serial-number mismatch,manual_investigation_required,additi
 R103,outside_return_window,Outside return window,policy_exception_review_required,additional_verification_required,Return requested beyond electronics 30-day window.
 R104,delivery_damage,Delivery damage,manual_investigation_required,additional_verification_required,Delivery issue recorded; damage claim on receipt.
 R105,verified_defect,Verified defect,warranty_review_required,no_inconsistency_detected,Inspection verified manufacturing defect.
-R106,already_refunded,Already refunded,eligible_for_standard_resolution,no_inconsistency_detected,Completed refund at rest; duplicate signal only with open refund row.
+R106,already_refunded,Already refunded,eligible_for_standard_resolution,no_inconsistency_detected,Completed refund at rest; duplicate payout blocked when a new open refund exists.
 R107,repeated_inconsistencies,Repeated inconsistencies,manual_investigation_required,manual_investigation_required,Customer history shows repeated mismatched returns.
 R108,repairable_product,Repairable product,eligible_for_standard_resolution,no_inconsistency_detected,Laptop keyboard damage; repair-and-resell is feasible.
 R109,missing_accessories,Missing accessories,policy_exception_review_required,additional_verification_required,Accessories incomplete per inspection.

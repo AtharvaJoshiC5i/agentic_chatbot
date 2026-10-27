@@ -12,8 +12,10 @@ from app.security.permissions import REFUND_APPROVE_ROLES, REFUND_EXECUTE_ROLES
 from app.services.actions import ActionServiceError, approve_action, execute_action, get_action, submit_action
 from app.services.refunds import RefundServiceError, approve_refund, execute_refund
 from app.services.cases import CaseServiceError, assign_case
+from app.services.cases import get_active_case
 from app.services.issue_types import coerce_issue_type
 from app.tools.compact import compact_json
+from app.tools.workflow_response import current_workflow_handoff
 
 
 @tool
@@ -23,8 +25,9 @@ def submit_create_investigation_case(
     priority: str = "medium",
     idempotency_key: str = "",
 ) -> str:
-    """Submit create_case (executes immediately when policy allows).
+    """Open a warehouse inspection case after the policy investigation allows handoff.
 
+    The service rejects definite out-of-policy returns before warehouse handoff.
     issue_type must be a canonical enum (serial_mismatch, missing_inspection, general, etc.).
     If inspection is missing, use missing_inspection — not inspection_needed or defective_product.
     """
@@ -47,12 +50,16 @@ def submit_create_investigation_case(
         )
     except ActionServiceError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
+    case = get_active_case(session, return_id)
     return compact_json(
         {
             "action_id": action.action_id,
             "action_type": action.action_type,
             "approval_status": action.approval_status,
             "execution_status": action.execution_status,
+            "case_id": case.case_id if case else None,
+            "case_status": case.case_status if case else None,
+            "workflow": current_workflow_handoff(session, return_id),
         }
     )
 
@@ -87,13 +94,15 @@ def submit_refund_request(
         )
     except ActionServiceError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
+    payload = json.loads(action.payload_json or "{}")
     return compact_json(
         {
-            "action_id": action.action_id,
-            "approval_required": action.approval_required,
-            "approval_status": action.approval_status,
-            "execution_status": action.execution_status,
-            "next_step": "Supervisor approval completes payout automatically when amount is within policy.",
+            "request_status": "submitted",
+            "refund_id": payload.get("refund_id"),
+            "refund_status": payload.get("refund_status"),
+            "approval_status": payload.get("refund_approval_status", "pending"),
+            "next_step": "A supervisor must review this request. No payout has been recorded yet.",
+            "workflow": current_workflow_handoff(session, return_id),
         }
     )
 
@@ -120,13 +129,14 @@ def submit_replacement_request(return_id: str, idempotency_key: str = "") -> str
         )
     except ActionServiceError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
+    payload = json.loads(action.payload_json or "{}")
     return compact_json(
         {
-            "action_id": action.action_id,
-            "approval_required": action.approval_required,
-            "approval_status": action.approval_status,
-            "execution_status": action.execution_status,
-            "next_step": "Supervisor must approve before replacement is dispatched.",
+            "request_status": "submitted",
+            "replacement_id": payload.get("replacement_id"),
+            "replacement_status": payload.get("replacement_status", "requested"),
+            "next_step": "A supervisor must review this request before the replacement is approved.",
+            "workflow": current_workflow_handoff(session, return_id),
         }
     )
 
@@ -195,6 +205,8 @@ def approve_refund_record(refund_id: int, approve: bool = True, reason: str = ""
             "return_id": refund.return_id,
             "refund_status": refund.refund_status,
             "approval_status": refund.approval_status,
+            "workflow": current_workflow_handoff(session, refund.return_id),
+            "payment_note": "Demo ledger status only; no payment provider is connected.",
         }
     )
 
@@ -373,7 +385,6 @@ ACTION_TOOLS = [
     submit_create_investigation_case,
     submit_refund_request,
     submit_replacement_request,
-    approve_refund_request,
     submit_repair_recovery_task,
     get_action_request_status,
     execute_action_request,

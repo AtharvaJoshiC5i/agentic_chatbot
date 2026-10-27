@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Iterator
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import RunnableConfig
 from pydantic import ConfigDict, Field
 
@@ -109,6 +109,25 @@ class GuardedChatModel(BaseChatModel):
             )
 
         return invoke_with_backoff(call)
+
+    def _stream(
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: Any = None,
+        **kwargs: Any,
+    ) -> Iterator[ChatGenerationChunk]:
+        """Stream chunks from OpenAI-compatible providers through the guard."""
+        config: RunnableConfig | None = kwargs.pop("config", None)
+        messages, config = self._prepare_messages(messages, config)
+        acquire_llm_slot(self.provider_id, self.max_rpm)
+        for chunk in self.inner.stream(messages, stop=stop, config=config, **kwargs):
+            if isinstance(chunk, ChatGenerationChunk):
+                yield chunk
+            elif isinstance(chunk, AIMessageChunk):
+                yield ChatGenerationChunk(message=chunk)
+            else:
+                yield ChatGenerationChunk(message=AIMessageChunk(content=str(chunk)))
 
     async def _agenerate(
         self,

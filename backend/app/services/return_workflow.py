@@ -42,13 +42,13 @@ def _status_summary(*, stage: str | None, return_status: str, requested_resoluti
         return "Warehouse says the replacement can be performed (stock available). Returns analyst should submit it."
     if stage == "decline_request":
         why = (verdict or {}).get("notes") or "no reason given"
-        return f"Warehouse says this cannot be performed ({why}). Returns analyst should decline and notify the customer."
+        return f"Warehouse says this cannot be performed ({why}). Returns analyst should decline and review the drafted customer message."
     if stage == "await_supervisor":
         return "Submitted to the supervisor; awaiting a decision."
     if stage == "customer_follow_up":
-        return "Decision recorded. Returns analyst should review and send the customer email."
+        return "Decision recorded. Returns analyst should review and confirm the drafted customer message. This demo does not send email."
     if return_status == "closed":
-        return "Closed. The customer has been notified."
+        return "Closed. Message confirmation is recorded locally; this demo did not send email."
     return f"Return status is {return_status.replace('_', ' ')}; requested {requested_resolution}."
 
 

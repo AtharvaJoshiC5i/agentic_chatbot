@@ -1,14 +1,17 @@
 import { renderAsync } from 'docx-preview'
 import { useEffect, useState } from 'react'
 import { fetchDocumentBlob, fetchDocumentHtmlPreview } from '../../lib/documentFile'
+import { focusDocumentPassage } from '../../lib/focusDocumentPassage'
 import { HtmlIframePreview } from './HtmlIframePreview'
 
 export function DocxCanvasPreview({
   documentId,
   filename,
+  passage,
 }: {
   documentId: number
   filename: string
+  passage?: string
 }) {
   const [host, setHost] = useState<HTMLDivElement | null>(null)
   const [useServerHtml, setUseServerHtml] = useState(false)
@@ -42,6 +45,11 @@ export function DocxCanvasPreview({
           useBase64URL: true,
           className: 'docx-preview-page',
         })
+        if (passage) {
+          requestAnimationFrame(() => {
+            if (!cancelled) focusDocumentPassage(host, passage)
+          })
+        }
       } catch {
         if (cancelled) return
         try {
@@ -65,7 +73,7 @@ export function DocxCanvasPreview({
   }, [documentId, host, useServerHtml])
 
   if (useServerHtml && serverHtml) {
-    return <HtmlIframePreview html={serverHtml} title={`Word preview: ${filename}`} />
+    return <HtmlIframePreview html={serverHtml} title={`Word preview: ${filename}`} passage={passage} />
   }
 
   return (

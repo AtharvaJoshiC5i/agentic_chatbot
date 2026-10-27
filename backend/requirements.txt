@@ -1,30 +1,49 @@
-# Phase 1 — core API stack (additional deps added in later phases)
-fastapi==0.115.6
+# ============================================================
+# AGENTIC CHATBOT BACKEND — combined (app + tests)
+# Python 3.15.1 (Windows). Single file:
+#   pip install -r requirements.txt
+#
+# Do NOT pin zstandard — let dependencies install a binary wheel.
+# If anything still fails, use Python 3.12 or 3.13 instead.
+# ============================================================
+ 
+# --- Phase 1: Core API ---
+fastapi==0.162.0
 uvicorn[standard]==0.34.0
-pydantic==2.10.4
-# chromadb/kubernetes pull newer pydantic at install time; 2.10.x works with FastAPI 0.115 in this project
-pydantic-settings==2.7.0
-python-dotenv==1.0.1
-SQLAlchemy==2.0.36
-alembic==1.14.0
-Faker==33.1.0
-numpy==2.2.1
-pandas==2.2.3
-# Phase 4 — unstructured document generation (scripts/generate_unstructured_documents.py)
-reportlab==4.2.5
-python-docx==1.1.2
-mammoth==1.9.0
-pypdf==5.1.0
-# Phase 5 — RAG / ChromaDB
-chromadb==0.5.23
-sentence-transformers==3.3.1
-# Phase 6 — API auth
-bcrypt==4.2.1
+pydantic==2.14.1
+pydantic-settings==2.16.1
+python-dotenv==1.2.4
+ 
+# --- Database ---
+SQLAlchemy==2.1.6
+alembic==1.20.1
+ 
+# --- Data / synthetic ---
+Faker==40.43.0
+numpy==2.5.4
+pandas==3.1.0
+ 
+# --- Documents ---
+reportlab==5.1.0
+python-docx==1.2.0
+mammoth==1.13.0
+pypdf==6.21.2
+ 
+# --- RAG ---
+chromadb==1.5.9
+sentence-transformers==6.2.0
+ 
+# --- Auth ---
+bcrypt==5.0.0
 python-jose[cryptography]==3.3.0
-# Phase 7 — Groq (OpenAI-compatible) + LangGraph agent
-openai==3.35.1
-langchain-core==1.6.12
+ 
+# --- LLM / agent ---
+openai==3.37.0
+langchain-core==1.7.0
 langchain-openai==1.7.2
-langgraph==1.2.16
-# Gemini — agent uses OpenAI-compatible API via langchain-openai; SDK optional for probes
-google-genai>=1.0.0
+langgraph==1.2.17
+google-genai>=1.0.0,<2.0.0
+ 
+# --- Dev / tests (included in this combined file) ---
+httpx==0.28.1
+pytest==8.3.4

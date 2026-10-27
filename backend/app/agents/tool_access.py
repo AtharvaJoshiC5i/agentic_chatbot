@@ -30,7 +30,6 @@ _TOOL_ROLE_REQUIREMENTS: dict[str, frozenset[UserRole]] = {
     "submit_recycle_task": RECOVERY_TASK_ROLES,
     "submit_evidence_request": WRITE_CASE_ROLES,
     "approve_action_request": ACTION_APPROVE_ROLES,
-    "approve_refund_request": ACTION_APPROVE_ROLES,
     "get_warehouse_handoff_status_tool": INSPECTION_WRITE_ROLES,
     "list_warehouse_handoffs": INSPECTION_WRITE_ROLES,
     "record_warehouse_receipt": INSPECTION_WRITE_ROLES,

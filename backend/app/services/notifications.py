@@ -29,7 +29,7 @@ _TEMPLATES: dict[str, tuple[str, str]] = {
     "refund_approved": (
         "Your refund for {product} has been approved",
         "We have reviewed your return {return_id} and approved your refund of {amount}.\n"
-        "The amount is being returned to your original payment method and usually appears within 5-7 business days.",
+        "This demo records the refund decision locally; no payment was transferred.",
     ),
     "refund_rejected": (
         "Update on your return {return_id}",
@@ -182,7 +182,7 @@ def send_notification(
         session,
         return_id=note.return_id,
         event_type="other",
-        description=f"Customer notified by {actor.username} ({note.kind}) at {note.to_email}.",
+        description=f"Customer message confirmation recorded by {actor.username} ({note.kind}); no email was sent.",
         source_type=SourceType.SYSTEM.value,
         source_id=f"notification:{note.notification_id}:sent",
         event_timestamp=note.sent_at,
@@ -214,7 +214,7 @@ def send_notification(
     ).first()
     if pending is None:
         try:
-            close_return(session, note.return_id, actor, description=f"Return closed after customer was notified by {actor.username}.")
+            close_return(session, note.return_id, actor, description=f"Return closed after message confirmation was recorded by {actor.username}; no email was sent.")
         except ReturnStatusError:
             pass  # not in a closable state (for example still being worked): leave it
     session.commit()

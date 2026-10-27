@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-LlmProviderChoice = Literal["groq", "gemini"]
+LlmProviderChoice = Literal["groq", "gemini", "nvidia"]
 
 
 class ChatTurn(BaseModel):
@@ -19,7 +19,7 @@ class ChatRequest(BaseModel):
     history: list[ChatTurn] = Field(default_factory=list)
     llm_provider: LlmProviderChoice | None = Field(
         default=None,
-        description="groq or gemini; omit to use server default (LLM_PROVIDER).",
+        description="groq, gemini, or nvidia; omit to use server default (LLM_PROVIDER).",
     )
 
 

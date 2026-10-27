@@ -1,5 +1,5 @@
 import { ExternalLink, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { DocumentHit, DocumentPreview } from '../../api/types'
 import { openDocumentInNewTab } from '../../lib/documentFile'
@@ -16,12 +16,10 @@ export function DocumentPreviewModal({
   onClose: () => void
 }) {
   const [preview, setPreview] = useState<DocumentPreview | null>(null)
-  const [textLoading, setTextLoading] = useState(true)
-  const highlightRef = useRef<HTMLDivElement | null>(null)
+  const pdfPage = Number(hit.page_or_section?.match(/\bpage\s+(\d+)\b/i)?.[1] ?? '') || null
 
   useEffect(() => {
     let cancelled = false
-    setTextLoading(true)
     api
       .documentPreview(hit.document_id)
       .then((data) => {
@@ -30,19 +28,10 @@ export function DocumentPreviewModal({
       .catch(() => {
         if (!cancelled) setPreview(null)
       })
-      .finally(() => {
-        if (!cancelled) setTextLoading(false)
-      })
     return () => {
       cancelled = true
     }
   }, [hit.document_id])
-
-  useEffect(() => {
-    if (!textLoading && highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  }, [textLoading, preview])
 
   return (
     <div
@@ -90,6 +79,8 @@ export function DocumentPreviewModal({
             documentId={hit.document_id}
             fileKind={hit.file_kind}
             filename={hit.filename}
+            passage={hit.passage}
+            page={pdfPage}
           />
         </div>
 
@@ -107,7 +98,6 @@ export function DocumentPreviewModal({
                 return (
                   <p
                     key={index}
-                    ref={highlightRef}
                     className="text-xs leading-6 text-stone-700"
                   >
                     <HighlightedPassage text={segment.text} passage={hit.passage} />
@@ -121,7 +111,7 @@ export function DocumentPreviewModal({
         <footer className="flex shrink-0 justify-end gap-2 border-t border-stone-200 px-4 py-3 sm:px-5">
           <button
             type="button"
-            onClick={() => void openDocumentInNewTab(hit.document_id)}
+            onClick={() => void openDocumentInNewTab(hit.document_id, pdfPage ?? undefined)}
             className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
           >
             <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden />

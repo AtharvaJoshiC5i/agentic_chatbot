@@ -18,9 +18,9 @@ function suggestedPrompt(row: WorkspaceQueueItem): string {
   const rid = row.return_id ?? ''
   const kind = row.approval_kind ?? row.action_type ?? 'request'
   return (
-    `Use get_return_workflow_status for ${rid}. Review the analyst's pending ${kind} request ` +
+    `Use build_return_timeline_tool and get_return_workflow_status for ${rid}. Review the complete chronological case history, inspections, warehouse verdict and analyst's pending ${kind} request ` +
     `(inspection on file: ${row.inspection_count ?? '—'}). ` +
-    'Summarize risks and recommend approve or reject. If I approve in chat, use approve_action_request or approve_refund_request as appropriate.'
+    'Summarize risks and recommend approve or reject. If I approve in chat, use approve_action_request for action requests, approve_refund_record for refunds, or decide_replacement_request for replacements.'
   )
 }
 
@@ -195,6 +195,19 @@ function ApprovalRow({
             Warehouse verdict: {humanize(verdict.recommendation ?? '')}
             {verdict.notes ? ` — ${verdict.notes}` : ''}
           </p>
+        )}
+        {row.workflow_timeline && row.workflow_timeline.length > 0 && (
+          <details className="mt-2 text-xs text-stone-600">
+            <summary className="cursor-pointer font-medium text-accent-700">Review full return timeline ({row.workflow_timeline.length} events)</summary>
+            <ol className="mt-2 space-y-1 border-l border-stone-200 pl-3">
+              {row.workflow_timeline.map((event) => (
+                <li key={event.event_id}>
+                  <span className="font-medium">{new Date(event.event_timestamp).toLocaleString()}</span>
+                  <span> · {event.description}</span>
+                </li>
+              ))}
+            </ol>
+          </details>
         )}
       </td>
       <td className="hidden px-4 py-3 sm:table-cell">

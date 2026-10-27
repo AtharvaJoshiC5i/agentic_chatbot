@@ -15,7 +15,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database.base import utc_now
-from app.models.enums import ActorType, CaseStatus, RequestedResolution, SourceType
+from app.models.enums import ActorType, CaseStatus, InspectionResult, RequestedResolution, SourceType
+from app.investigation.investigation import run_investigation
 from app.models.tables import (
     InvestigationCase,
     Inspection,
@@ -27,9 +28,9 @@ from app.models.tables import (
 from app.security.deps import CurrentUser
 from app.services.audit import record_audit
 from app.services.case_transitions import can_transition
-from app.services.cases import CaseServiceError, get_active_case, transition_case_status
+from app.services.cases import CaseServiceError, get_active_case, record_policy_rejection_case, transition_case_status
 from app.services.return_events import record_return_event
-from app.services.return_status import on_declined
+from app.services.return_status import on_declined, on_policy_declined
 
 
 _RANK = {
@@ -112,7 +113,7 @@ def advance_case(session: Session, case: InvestigationCase, path: list[CaseStatu
 def claim_case_for_warehouse(session: Session, return_id: str, actor: CurrentUser) -> None:
     """First warehouse action on a case: assign it to that user and mark it in progress."""
     case = get_active_case(session, return_id)
-    if case is None or case.case_status != CaseStatus.OPEN.value:
+    if case is None or case.case_status not in {CaseStatus.OPEN.value, CaseStatus.ASSIGNED.value}:
         return
     case.assigned_to = actor.username
     advance_case(session, case, [CaseStatus.IN_PROGRESS], actor)
@@ -149,6 +150,17 @@ def record_verdict(
         raise WorkflowError("The analyst has already submitted this case to the supervisor.", "already_submitted")
     if inspection_count(session, return_id) == 0:
         raise WorkflowError("Record the warehouse inspection before giving a verdict.", "inspection_required")
+    latest_inspection = session.execute(
+        select(Inspection)
+        .where(Inspection.return_id == return_id)
+        .order_by(Inspection.inspection_id.desc())
+        .limit(1)
+    ).scalar_one()
+    if feasible and latest_inspection.inspection_result != InspectionResult.PASS.value:
+        raise WorkflowError(
+            "A request cannot be marked feasible unless the latest inspection passed. Record the inspection outcome first.",
+            "inspection_unsuccessful",
+        )
 
     recommendation = (recommendation or "").strip().lower()
     if recommendation not in ("proceed", "decline"):
@@ -247,7 +259,7 @@ def mark_case_submitted(session: Session, case: InvestigationCase, actor: Curren
 
 
 def decline_return(session: Session, *, return_id: str, actor: CurrentUser, reason: str) -> Return:
-    """Analyst declines (typically after a 'decline' warehouse verdict) and a customer message is drafted."""
+    """Reject an out-of-policy request before handoff or a warehouse-declined request after inspection."""
     from app.services.notifications import draft_notification
 
     reason = (reason or "").strip()
@@ -258,7 +270,45 @@ def decline_return(session: Session, *, return_id: str, actor: CurrentUser, reas
         raise WorkflowError("Return not found", "not_found")
     case = get_active_case(session, return_id)
     if case is None:
-        raise WorkflowError("No active investigation case to decline.", "no_case")
+        investigation = run_investigation(session, return_id)
+        policy = investigation.f3_policy if investigation else None
+        if policy is None or policy.within_return_window is not False:
+            raise WorkflowError(
+                "An early policy rejection requires a definite out-of-window result from the policy check. "
+                "If eligible or uncertain, open the inspection case or gather the missing information.",
+                "policy_not_failed",
+            )
+        basis = (
+            f"Policy check: {policy.product_category} allows {policy.return_window_days} days; "
+            f"this request was made {policy.days_after_delivery} days after delivery."
+        )
+        reason = f"{reason} {basis}"
+        record_policy_rejection_case(session, return_id=return_id, reason=reason, actor=actor)
+        on_policy_declined(session, return_id, reason, actor)
+        draft_notification(session, return_id=return_id, kind="declined", actor=actor, reason=reason)
+        record_audit(
+            session,
+            actor=actor,
+            actor_type=ActorType.USER,
+            action_type="decline_return_for_policy",
+            target_entity="return",
+            target_id=return_id,
+            execution_result="succeeded",
+            evidence_references={
+                "reason": reason,
+                "policy": {
+                    "product_category": policy.product_category,
+                    "return_window_days": policy.return_window_days,
+                    "days_after_delivery": policy.days_after_delivery,
+                    "delivery_date": policy.delivery_date.isoformat() if policy.delivery_date else None,
+                    "return_request_date": policy.return_request_date.isoformat() if policy.return_request_date else None,
+                    "within_return_window": policy.within_return_window,
+                },
+            },
+        )
+        session.commit()
+        session.refresh(row)
+        return row
     if get_latest_verdict(session, return_id) is None:
         raise WorkflowError("Wait for the warehouse verdict before declining.", "verdict_required")
     if case.case_status == CaseStatus.PENDING_APPROVAL.value:

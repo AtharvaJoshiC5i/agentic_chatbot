@@ -63,6 +63,10 @@ backend/chroma_data/
 .cache/
 **/.cache/
 models/
+# The generic ML cache rule also matches this application package.
+!backend/app/models/
+backend/app/models/**
+!backend/app/models/*.py
 *.onnx
 
 # --- Generated data exports (source JSON in repo; exports optional) ---

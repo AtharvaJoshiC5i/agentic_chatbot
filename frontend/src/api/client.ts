@@ -303,7 +303,7 @@ export const api = {
     conversation_id?: string | null
     return_id?: string | null
     history?: ChatTurn[]
-    llm_provider?: 'groq' | 'gemini' | null
+    llm_provider?: 'groq' | 'gemini' | 'nvidia' | null
   }) {
     return request<ChatResponse>('/api/chat', {
       method: 'POST',
@@ -317,7 +317,7 @@ export const api = {
       conversation_id?: string | null
       return_id?: string | null
       history?: ChatTurn[]
-      llm_provider?: 'groq' | 'gemini' | null
+      llm_provider?: 'groq' | 'gemini' | 'nvidia' | null
     },
     handlers: {
       onStep: (step: AgentStep) => void

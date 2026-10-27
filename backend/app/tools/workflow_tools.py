@@ -28,6 +28,7 @@ from app.investigation.evidence_summary import detect_return_inconsistencies
 from app.services.complaint_intelligence import analyze_product_complaint_patterns
 from app.services.timeline import build_return_timeline
 from app.tools.compact import compact_json
+from app.tools.workflow_response import current_workflow_handoff
 
 
 @tool
@@ -82,12 +83,19 @@ def list_warehouse_handoffs(limit: int = 25) -> str:
 
 
 @tool
-def record_warehouse_receipt(return_id: str) -> str:
-    """Mark return as received at warehouse (before inspection). Warehouse manager or supervisor."""
+def record_warehouse_receipt(return_id: str, arrival_confirmed: bool) -> str:
+    """Record physical warehouse arrival only after a person explicitly confirms the unit is present."""
     session = get_agent_db()
     user = get_agent_user()
     if user.role not in INSPECTION_WRITE_ROLES:
         return compact_json({"error": "forbidden", "message": "Role cannot record warehouse receipt."})
+    if not arrival_confirmed:
+        return compact_json(
+            {
+                "error": "arrival_not_confirmed",
+                "message": "Receipt was not recorded. Confirm that the physical unit is present at the warehouse first.",
+            }
+        )
     try:
         row = receive_return_at_warehouse(session, return_id, user)
     except ReturnStatusError as exc:
@@ -97,6 +105,7 @@ def record_warehouse_receipt(return_id: str) -> str:
             "return_id": row.return_id,
             "return_status": row.return_status,
             "received_date": row.received_date.isoformat() if row.received_date else None,
+            "workflow": current_workflow_handoff(session, row.return_id),
         }
     )
 
@@ -131,7 +140,13 @@ def record_inspection_tool(
     except (InspectionServiceError, ValueError) as exc:
         code = getattr(exc, "code", "invalid_request")
         return compact_json({"error": code, "message": str(exc)})
-    return compact_json({"inspection_id": row.inspection_id, "return_id": row.return_id})
+    return compact_json(
+        {
+            "inspection_id": row.inspection_id,
+            "return_id": row.return_id,
+            "workflow": current_workflow_handoff(session, row.return_id),
+        }
+    )
 
 
 @tool
@@ -211,13 +226,19 @@ def record_warehouse_verdict(return_id: str, feasible: bool, recommendation: str
         )
     except WorkflowError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
-    return compact_json({**verdict_to_dict(verdict), "next_owner": "returns_analyst"})
+    return compact_json(
+        {
+            **verdict_to_dict(verdict),
+            "next_owner": "returns_analyst",
+            "workflow": current_workflow_handoff(session, verdict.return_id),
+        }
+    )
 
 
 @tool
 def decline_return_request(return_id: str, reason: str) -> str:
-    """Returns analyst: decline the customer's request (usually because the warehouse verdict says it cannot be
-    performed). Rejects the return, resolves the case and drafts the customer email for you to confirm."""
+    """Returns analyst: decline only a definite policy failure before warehouse handoff or a request the warehouse
+    found infeasible. Rejects the return and creates a customer message draft for analyst review."""
     session = get_agent_db()
     user = get_agent_user()
     if user.role not in DECLINE_ROLES:
@@ -226,7 +247,14 @@ def decline_return_request(return_id: str, reason: str) -> str:
         row = decline_return(session, return_id=return_id.strip().upper(), actor=user, reason=reason)
     except (WorkflowError, ReturnStatusError) as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
-    return compact_json({"return_id": row.return_id, "return_status": row.return_status, "next_step": "Review and send the customer email."})
+    return compact_json(
+        {
+            "return_id": row.return_id,
+            "return_status": row.return_status,
+            "next_step": "Review and confirm the customer message draft.",
+            "workflow": current_workflow_handoff(session, row.return_id),
+        }
+    )
 
 
 @tool
@@ -241,7 +269,12 @@ def decide_replacement_request(replacement_id: int, approve: bool, reason: str =
         row = decide_replacement(session, replacement_id=replacement_id, actor=user, approve=approve, reason=reason)
     except ReplacementServiceError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
-    return compact_json(replacement_to_dict(row))
+    return compact_json(
+        {
+            **replacement_to_dict(row),
+            "workflow": current_workflow_handoff(session, row.return_id),
+        }
+    )
 
 
 @tool
@@ -264,7 +297,13 @@ def send_customer_notification(notification_id: int, subject: str = "", body: st
         note = send_notification(session, notification_id=notification_id, actor=user, subject=subject or None, body=body or None)
     except NotificationError as exc:
         return compact_json({"error": exc.code, "message": str(exc)})
-    return compact_json(notification_to_dict(note))
+    return compact_json(
+        {
+            **notification_to_dict(note),
+            "workflow": current_workflow_handoff(session, note.return_id),
+            "delivery_note": "Confirmation recorded locally; no email was delivered.",
+        }
+    )
 
 
 WORKFLOW_TOOLS = [

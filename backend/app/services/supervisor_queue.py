@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.enums import ActionType, ApprovalStatus, RefundStatus
 from app.models.tables import ActionRequest, Refund, Return
 from app.services.return_workflow import build_return_workflow_snapshot
+from app.services.timeline import build_return_timeline
 
 _SUPERVISOR_ACTION_TYPES = frozenset(
     {
@@ -150,6 +151,7 @@ def build_supervisor_approval_queue(session: Session, *, limit: int = 50) -> lis
             item["warehouse_verdict"] = snap.get("warehouse_verdict")
             item["latest_inspection"] = snap.get("latest_inspection")
             item["case"] = snap.get("active_case")
+            item["workflow_timeline"] = build_return_timeline(session, rid)
 
     items.sort(key=lambda x: (x.get("return_id") or "", x.get("refund_id") or 0, x.get("replacement_id") or 0, x.get("action_id") or 0))
     return items[:limit]

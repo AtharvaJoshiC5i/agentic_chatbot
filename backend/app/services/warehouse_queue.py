@@ -37,11 +37,9 @@ def _inspection_count(session: Session, return_id: str) -> int:
 
 
 def _is_received(row: Return) -> bool:
-    return row.received_date is not None or row.return_status in (
-        ReturnStatus.RECEIVED.value,
-        ReturnStatus.INSPECTING.value,
-        ReturnStatus.INVESTIGATING.value,
-    )
+    # Workflow status can be stale or represent case processing. Only the explicit
+    # receipt timestamp proves that warehouse arrival was recorded.
+    return row.received_date is not None
 
 
 def build_warehouse_work_queue(session: Session, *, limit: int = 100) -> list[dict[str, Any]]:
@@ -79,6 +77,7 @@ def build_warehouse_work_queue(session: Session, *, limit: int = 100) -> list[di
                 "subtitle": f"Case #{case.case_id} · {resolution} · {row.return_reason.replace('_', ' ')}",
                 "status": row.return_status,
                 "case_id": case.case_id,
+                "assigned_to": case.assigned_to,
                 "priority": case.priority,
                 "requested_resolution": resolution,
                 "workflow_stage": stage,

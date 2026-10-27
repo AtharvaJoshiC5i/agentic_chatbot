@@ -15,7 +15,7 @@ from app.agents.context import agent_run_config, apply_agent_context_if_provided
 from app.llm.context_window import fit_messages_to_context_budget
 from app.agents.document_citations import enrich_tool_events_with_documents
 from app.agents.visuals import build_visuals
-from app.agents.evidence import build_supporting_evidence
+from app.agents.evidence import append_source_references, build_supporting_evidence
 from app.agents.history import trim_history
 from app.agents.operator_response import format_operator_response
 from app.agents.prompts import build_system_prompt
@@ -85,16 +85,19 @@ def collect_tool_events(messages: list) -> list[dict[str, Any]]:
 
         if isinstance(message, ToolMessage):
             preview = _preview_tool_content(message.content)
+            full_content = message.content if isinstance(message.content, str) else str(message.content)
             call_id = message.tool_call_id
             idx = pending_by_id.get(call_id) if call_id else None
             if idx is not None and "result_preview" not in events[idx]:
                 events[idx]["result_preview"] = preview
+                events[idx]["_result_content"] = full_content
             else:
                 events.append(
                     {
                         "tool": message.name or "tool",
                         "args": {},
                         "result_preview": preview,
+                        "_result_content": full_content,
                     }
                 )
 
@@ -231,6 +234,9 @@ def _finalize_run(
 
     tool_events = enrich_tool_events_with_documents(collect_tool_events(final_messages))
     supporting_evidence = build_supporting_evidence(tool_events)
+    final_text = append_source_references(final_text, supporting_evidence)
+    for event in tool_events:
+        event.pop("_result_content", None)
     visuals = build_visuals(tool_events, focus_return)
     agent_steps = build_agent_steps(workflow, include_synthesis=True)
 

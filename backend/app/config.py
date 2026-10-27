@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     )
     gemini_max_rpm: int = Field(default=14, validation_alias=AliasChoices("GEMINI_MAX_RPM"))
 
+    nvidia_api_key: str = Field(default="", validation_alias=AliasChoices("NVIDIA_API_KEY"))
+    nvidia_model: str = Field(default="z-ai/glm-5.3-flash", validation_alias=AliasChoices("NVIDIA_MODEL"))
+    nvidia_base_url: str = Field(default="https://integrate.api.nvidia.com/v1", validation_alias=AliasChoices("NVIDIA_BASE_URL"))
+    nvidia_max_rpm: int = Field(default=30, validation_alias=AliasChoices("NVIDIA_MAX_RPM"))
+
     llm_context_input_tokens: int = Field(
         default=28_000,
         validation_alias=AliasChoices("LLM_CONTEXT_INPUT_TOKENS"),
@@ -175,7 +180,8 @@ class Settings(BaseSettings):
     def llm_configured(self) -> bool:
         groq_ok = bool(self.groq_api_keys_list and self.groq_model.strip())
         gemini_ok = bool(self.gemini_api_key.strip())
-        return groq_ok or gemini_ok
+        nvidia_ok = bool(self.nvidia_api_key.strip() and self.nvidia_model.strip())
+        return groq_ok or gemini_ok or nvidia_ok
 
     def ensure_runtime_directories(self) -> None:
         """Create directories required for SQLite and Chroma when using default layout."""

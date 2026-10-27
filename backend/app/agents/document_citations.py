@@ -11,8 +11,10 @@ DOCUMENT_TOOL_NAMES = frozenset(
         "search_return_policy",
         "search_inspection_reports",
         "search_customer_complaints",
+        "search_support_communications",
         "search_warranty_documents",
         "search_supplier_reports",
+        "search_refurbishment_guidelines",
         "resolve_applicable_policy",
     }
 )
@@ -90,7 +92,7 @@ def parse_document_hits(tool_name: str, content: Any) -> list[dict[str, Any]]:
 def enrich_tool_events_with_documents(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for event in events:
         tool = event.get("tool") or ""
-        preview = event.get("result_preview")
+        preview = event.get("_result_content") or event.get("result_preview")
         hits = parse_document_hits(tool, preview)
         if hits:
             event["document_hits"] = hits

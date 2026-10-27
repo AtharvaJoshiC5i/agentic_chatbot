@@ -143,7 +143,7 @@ function DocumentEvidenceCard({
 
 export function SupportingEvidence({ bundle }: { bundle: EvidenceBundle | null | undefined }) {
   const [previewHit, setPreviewHit] = useState<DocumentHit | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   const panelId = useId()
   const titleId = useId()
 
@@ -180,7 +180,7 @@ export function SupportingEvidence({ bundle }: { bundle: EvidenceBundle | null |
               </span>
             </span>
             <span className="mt-0.5 block text-[11px] text-stone-500">
-              {open ? 'Hide sources' : 'Show sources used for this answer'}
+              {open ? 'Sources used for this answer' : 'Show sources used for this answer'}
             </span>
           </span>
         </button>

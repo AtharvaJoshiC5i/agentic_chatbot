@@ -84,6 +84,8 @@ def test_create_case_and_dashboard(populated_db) -> None:
     )
     assert create.status_code == 201
     case_id = create.json()["case_id"]
+    assert create.json()["assigned_to"] == "warehouse_mgr"
+    assert create.json()["case_status"] == "assigned"
 
     dashboard = client.get("/api/dashboard/summary", headers=_auth_header(analyst_token))
     assert dashboard.status_code == 200

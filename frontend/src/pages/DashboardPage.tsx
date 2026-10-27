@@ -37,11 +37,11 @@ export function DashboardPage() {
 
   const blurb =
     personaKey === 'returns_analyst' || (isAnalyst && !personaKey)
-      ? 'Triage returns, coordinate warehouse inspection, and submit refund or replacement requests for supervisor approval.'
+      ? 'Check each return against policy first, route eligible requests to the assigned warehouse manager, and submit supported refund or replacement requests for supervisor approval.'
       : personaKey === 'warehouse_manager' || (isWarehouse && !personaKey)
         ? 'Receive units and record inspections for analyst cases — refund and replacement paths use the same steps.'
         : personaKey === 'returns_supervisor' || approvalsUi
-          ? 'Approve or reject analyst refund and replacement requests. The analyst emails the customer after your decision.'
+          ? 'Approve or reject analyst refund and replacement requests. The analyst reviews and confirms the drafted customer message after your decision; this demo does not send email.'
           : `${persona.headerTagline}.`
 
   return (
