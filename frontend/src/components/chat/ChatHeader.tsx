@@ -48,10 +48,7 @@ export function ChatHeader({
 
       <div className="flex min-w-0 flex-1 items-center gap-2 border-l border-stone-200/80 pl-2.5 sm:pl-3">
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-sm font-semibold text-stone-900">
-            {persona.headerTitle}
-          </h1>
-          <p className="hidden truncate text-xs text-stone-500 sm:block">{persona.headerTagline}</p>
+          <h1 className="truncate text-sm font-semibold text-stone-900">{persona.headerTitle}</h1>
         </div>
       </div>
 

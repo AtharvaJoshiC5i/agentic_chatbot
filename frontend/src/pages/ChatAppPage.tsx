@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { ChatComposer } from '../components/chat/ChatComposer'
 import { ChatHeader } from '../components/chat/ChatHeader'
@@ -12,7 +12,9 @@ import { useLlm } from '../context/LlmContext'
 import {
   createConversation,
   createMessage,
+  findConversationByReturnId,
   loadConversations,
+  normalizeReturnId,
   saveConversations,
   titleFromMessage,
   type Conversation,
@@ -21,12 +23,12 @@ import {
 import { upsertAgentStep } from '../lib/agentSteps'
 import { mergeDocumentSources } from '../lib/documentSources'
 import { buildSupportingEvidenceFromResponse } from '../lib/supportingEvidence'
+import { notifyWorkspaceDashboardRefresh } from '../lib/workspaceRefresh'
 import type { AgentStep } from '../api/types'
-import type { ChatVisual } from '../lib/visuals'
-
 export function ChatAppPage() {
   const { username } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const accountKey = useMemo(() => username?.trim() ?? '', [username])
   const { selectedProvider } = useLlm()
@@ -38,6 +40,7 @@ export function ChatAppPage() {
   const [pending, setPending] = useState(false)
   const [liveAgentSteps, setLiveAgentSteps] = useState<AgentStep[]>([])
   const [streamingContent, setStreamingContent] = useState<string | null>(null)
+  const [contextRefreshKey, setContextRefreshKey] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const active =
@@ -63,24 +66,32 @@ export function ChatAppPage() {
     [activeId, conversations, persist],
   )
 
-  const updateMessageVisuals = useCallback(
-    (messageId: string, visuals: ChatVisual[]) => {
-      if (!activeId) return
-      persist(
-        conversations.map((c) =>
-          c.id === activeId
-            ? {
-                ...c,
-                messages: c.messages.map((m) =>
-                  m.id === messageId ? { ...m, visuals } : m,
-                ),
-                updatedAt: new Date().toISOString(),
-              }
-            : c,
-        ),
-      )
+  const openReturnConversation = useCallback(
+    (returnIdRaw: string, draftMessage?: string) => {
+      const rid = normalizeReturnId(returnIdRaw)
+      if (!rid || !accountKey) return
+
+      const list = conversations.length > 0 ? conversations : loadConversations(accountKey)
+      const existing = findConversationByReturnId(list, rid)
+
+      if (existing) {
+        setActiveId(existing.id)
+        if (draftMessage !== undefined) {
+          setDraft(draftMessage)
+        }
+      } else {
+        const c = createConversation(rid)
+        c.title = rid
+        const next = [c, ...list]
+        persist(next)
+        setActiveId(c.id)
+        setDraft(draftMessage ?? '')
+      }
+
+      setContextOpen(true)
+      if (window.innerWidth < 1024) setSidebarOpen(false)
     },
-    [activeId, conversations, persist],
+    [accountKey, conversations, persist],
   )
 
   useEffect(() => {
@@ -96,8 +107,10 @@ export function ChatAppPage() {
       setConversations(list)
       setActiveId((prev) => (prev && list.some((c) => c.id === prev) ? prev : list[0].id))
     }
-    setDraft('')
-  }, [accountKey])
+    if (!searchParams.get('return')?.trim()) {
+      setDraft('')
+    }
+  }, [accountKey, searchParams])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -110,29 +123,23 @@ export function ChatAppPage() {
   useEffect(() => {
     const raw = searchParams.get('return')?.trim()
     if (!raw || !accountKey) return
-    const rid = raw.toUpperCase()
-    if (!/^R\d+$/.test(rid)) return
+    const rid = normalizeReturnId(raw)
+    if (!rid) return
 
-    setConversations((prev) => {
-      const list = prev.length ? prev : loadConversations(accountKey)
-      const targetId = activeId ?? list[0]?.id
-      if (!targetId) return prev
-      const next = list.map((c) =>
-        c.id === targetId ? { ...c, returnId: rid, updatedAt: new Date().toISOString() } : c,
-      )
-      saveConversations(next, accountKey)
-      return next
-    })
-    setContextOpen(true)
-    const draftFromNav = (location.state as { draftMessage?: string } | null)?.draftMessage
-    if (draftFromNav?.trim()) {
-      setDraft(draftFromNav.trim())
-    }
+    const draftFromNav =
+      (location.state as { draftMessage?: string } | null)?.draftMessage?.trim() ?? ''
+
+    openReturnConversation(rid, draftFromNav)
     setSearchParams({}, { replace: true })
-  }, [searchParams, accountKey, activeId, setSearchParams, location.state])
+    navigate('/workspace', { replace: true, state: {} })
+  }, [searchParams, accountKey, location.state, openReturnConversation, navigate, setSearchParams])
 
   function startNewChat(pinReturn?: string | null) {
     const c = createConversation(pinReturn ?? null)
+    if (pinReturn) {
+      const rid = normalizeReturnId(pinReturn)
+      if (rid) c.title = rid
+    }
     const next = [c, ...conversations]
     persist(next)
     setActiveId(c.id)
@@ -142,6 +149,7 @@ export function ChatAppPage() {
 
   function selectConversation(id: string) {
     setActiveId(id)
+    setDraft('')
     if (window.innerWidth < 1024) setSidebarOpen(false)
   }
 
@@ -151,11 +159,13 @@ export function ChatAppPage() {
       const fresh = createConversation()
       persist([fresh])
       setActiveId(fresh.id)
+      setDraft('')
       return
     }
     persist(remaining)
     if (activeId === id) {
       setActiveId(remaining[0].id)
+      setDraft('')
     }
   }
 
@@ -215,13 +225,13 @@ export function ChatAppPage() {
       const assistantMsg = createMessage('assistant', res.final_response, {
         toolEvents,
         agentSteps: res.agent_steps?.length ? res.agent_steps : liveAgentSteps,
-        visuals: res.visuals ?? [],
         supportingEvidence: buildSupportingEvidenceFromResponse(
           res.supporting_evidence,
           toolEvents,
           res.document_sources,
         ),
         documentSources: mergeDocumentSources(res.document_sources, toolEvents),
+        citations: res.citations,
         provider: res.llm_provider,
         model: res.llm_model,
       })
@@ -259,12 +269,14 @@ export function ChatAppPage() {
       setPending(false)
       setLiveAgentSteps([])
       setStreamingContent(null)
+      setContextRefreshKey((k) => k + 1)
+      notifyWorkspaceDashboardRefresh()
     }
   }
 
   function handleTryExample(message: string, pinReturn?: string | null) {
     if (pinReturn) {
-      updateActive((c) => ({ ...c, returnId: pinReturn }))
+      openReturnConversation(pinReturn)
     }
     void sendMessage(message, pinReturn ?? returnId)
   }
@@ -284,7 +296,7 @@ export function ChatAppPage() {
         activeId={active?.id ?? null}
         onSelect={selectConversation}
         onNewChat={() => startNewChat()}
-        onSearchReturn={(id) => startNewChat(id)}
+        onOpenReturn={(id) => openReturnConversation(id, '')}
         onDeleteConversation={deleteConversation}
       />
 
@@ -316,7 +328,6 @@ export function ChatAppPage() {
                   pending={pending}
                   liveAgentSteps={liveAgentSteps}
                   streamingContent={streamingContent}
-                  onUpdateMessageVisuals={updateMessageVisuals}
                 />
               )}
             </div>
@@ -338,7 +349,11 @@ export function ChatAppPage() {
                 aria-hidden
               />
               <div className="fixed inset-y-0 right-0 z-40 flex w-80 max-w-[90vw] shadow-pop lg:static lg:z-0 lg:max-w-none lg:shadow-none">
-                <ContextPanel returnId={returnId} onClose={() => setContextOpen(false)} />
+                <ContextPanel
+                  returnId={returnId}
+                  refreshKey={contextRefreshKey}
+                  onClose={() => setContextOpen(false)}
+                />
               </div>
             </>
           )}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchDocumentBlob, fetchDocumentHtmlPreview } from '../../lib/documentFile'
+import { CitedDocumentTextPreview } from './CitedDocumentTextPreview'
 import { DocxCanvasPreview } from './DocxCanvasPreview'
 import { HtmlIframePreview } from './HtmlIframePreview'
 
@@ -21,6 +22,9 @@ export function DocumentNativePreview({
   page?: number | null
 }) {
   const kind = normalizeKind(fileKind)
+  const citedPassage = passage?.trim() ?? ''
+  const useCitedPdfView = kind === 'pdf' && citedPassage.length > 0
+
   const blobUrlRef = useRef<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
@@ -32,7 +36,7 @@ export function DocumentNativePreview({
     let cancelled = false
 
     async function load() {
-      if (kind === 'docx') return
+      if (kind === 'docx' || useCitedPdfView) return
 
       setLoading(true)
       setError(null)
@@ -76,7 +80,18 @@ export function DocumentNativePreview({
         blobUrlRef.current = null
       }
     }
-  }, [documentId, kind])
+  }, [documentId, kind, useCitedPdfView])
+
+  if (useCitedPdfView) {
+    return (
+      <CitedDocumentTextPreview
+        documentId={documentId}
+        filename={filename}
+        passage={citedPassage}
+        page={page}
+      />
+    )
+  }
 
   if (kind === 'docx') {
     return <DocxCanvasPreview documentId={documentId} filename={filename} passage={passage} />

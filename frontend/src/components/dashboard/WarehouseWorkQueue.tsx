@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { WorkspaceDashboardOut, WorkspaceQueueItem } from '../../api/types'
+import { warehouseAgentPrompt } from '../../lib/workflowAgent'
 import { humanize } from '../../lib/format'
 import { button } from '../ui/styles'
 import { Badge } from '../ui/Badge'
+import { AskAgentLink } from './AskAgentLink'
+import { QueueUpdateHint } from './QueueUpdateHint'
 import { VerdictForm } from './RowActions'
 
 const STAGE_FILTERS: { id: string; label: string; match: (s: string) => boolean }[] = [
@@ -17,31 +19,6 @@ function stageTone(stage: string): 'accent' | 'warning' | 'neutral' {
   if (stage === 'receive') return 'warning'
   if (stage === 'inspect' || stage === 'verdict') return 'accent'
   return 'neutral'
-}
-
-function suggestedPrompt(row: WorkspaceQueueItem): string {
-  const rid = row.return_id ?? ''
-  const resolution = row.requested_resolution ?? 'refund or replacement'
-  if (row.workflow_stage === 'receive') {
-    return (
-      `Use get_warehouse_handoff_status for ${rid} first. ` +
-      `Analyst case #${row.case_id}; customer requested ${resolution}. ` +
-      'There is no receipt or inspection recorded yet. Do not record receipt just because a case was opened. Ask whether the physical unit is present; only after explicit confirmation record receipt, then inspection. ' +
-      'Do not say there is no open case. Do not approve refund or replacement.'
-    )
-  }
-  if (row.workflow_stage === 'verdict') {
-    return (
-      `Use get_warehouse_handoff_status for ${rid}. Inspection is recorded. The customer requested ${resolution}. ` +
-      'Tell me whether it can be performed (for a replacement, check stock), then record my verdict with record_warehouse_verdict. ' +
-      'A decline needs a reason.'
-    )
-  }
-  return (
-    `Use get_warehouse_handoff_status for ${rid} first. ` +
-    `Customer requested ${resolution}. Check the recorded receipt first; do not infer physical arrival from return status or case handoff. If not received, ask before recording receipt or inspection. ` +
-    'Summarize handoff status and inspection findings for the analyst. Do not approve refund or replacement.'
-  )
 }
 
 export function WarehouseWorkQueue({ data, onRefresh }: { data: WorkspaceDashboardOut; onRefresh: () => void }) {
@@ -143,14 +120,9 @@ function QueueRow({ row, onRefresh }: { row: WorkspaceQueueItem; onRefresh: () =
                 Give verdict
               </button>
             )}
-            <Link
-              to={`/workspace?return=${encodeURIComponent(rid)}`}
-              state={{ draftMessage: suggestedPrompt(row) }}
-              className={button('primary', 'sm')}
-            >
-              Open agent
-            </Link>
+            <AskAgentLink returnId={rid} draftMessage={warehouseAgentPrompt(row)} />
           </div>
+          <QueueUpdateHint row={row} />
           {open && stage === 'verdict' && (
             <VerdictForm returnId={rid} resolution={row.requested_resolution ?? 'refund'} onDone={() => { setOpen(false); onRefresh() }} />
           )}

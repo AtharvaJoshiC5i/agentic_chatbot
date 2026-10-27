@@ -231,21 +231,37 @@ def get_order_item(order_item_id: int) -> str:
 
 @tool
 def get_product_unit(serial_number: str) -> str:
-    """Lookup a serialized product unit by serial number."""
+    """Lookup a serialized product unit by serial number or by order-line purchased serial."""
     session = get_agent_db()
+    serial_number = serial_number.strip()
     unit = session.execute(
         select(ProductUnit).where(ProductUnit.serial_number == serial_number)
     ).scalar_one_or_none()
+    matched_via: str | None = None
+    if unit is None:
+        item = session.execute(
+            select(OrderItem).where(OrderItem.purchased_serial_number == serial_number)
+        ).scalar_one_or_none()
+        if item is not None:
+            unit = session.execute(
+                select(ProductUnit)
+                .where(ProductUnit.order_item_id == item.order_item_id)
+                .limit(1)
+            ).scalar_one_or_none()
+            if unit is not None:
+                matched_via = "purchased_serial_number"
     if unit is None:
         return compact_json({"error": "unit_not_found", "serial_number": serial_number})
-    return compact_json(
-        {
-            "product_unit_id": unit.product_unit_id,
-            "order_item_id": unit.order_item_id,
-            "serial_number": unit.serial_number,
-            "unit_status": unit.unit_status,
-        }
-    )
+    payload: dict = {
+        "product_unit_id": unit.product_unit_id,
+        "order_item_id": unit.order_item_id,
+        "serial_number": unit.serial_number,
+        "unit_status": unit.unit_status,
+    }
+    if matched_via:
+        payload["matched_via"] = matched_via
+        payload["lookup_serial"] = serial_number
+    return compact_json(payload)
 
 
 @tool

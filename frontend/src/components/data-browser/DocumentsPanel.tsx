@@ -4,11 +4,22 @@ import { api } from '../../api/client'
 import type { DocumentBrowserItem } from '../../api/types'
 import { humanize } from '../../lib/format'
 import { DocumentFileIcon } from '../chat/DocumentFileIcon'
+import type { DocumentDeepLink } from '../../lib/dataExplorerNav'
 import { BrowserDocumentPreview } from './BrowserDocumentPreview'
 
 const PAGE_SIZE = 40
 
-export function DocumentsPanel() {
+export function DocumentsPanel({
+  refreshKey = 0,
+  focus = null,
+  onRequestBootstrap,
+  bootstrapping = false,
+}: {
+  refreshKey?: number
+  focus?: DocumentDeepLink | null
+  onRequestBootstrap?: () => void
+  bootstrapping?: boolean
+}) {
   const [items, setItems] = useState<DocumentBrowserItem[]>([])
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
@@ -18,8 +29,22 @@ export function DocumentsPanel() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selected, setSelected] = useState<DocumentBrowserItem | null>(null)
+  const [highlightPassage, setHighlightPassage] = useState<string | undefined>()
+  const [highlightPage, setHighlightPage] = useState<number | undefined>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!focus?.documentId) return
+    setHighlightPassage(focus.passage)
+    setHighlightPage(focus.page)
+    api
+      .dataBrowserDocuments({ document_id: focus.documentId, limit: 1, offset: 0 })
+      .then((res) => {
+        if (res.items[0]) setSelected(res.items[0])
+      })
+      .catch(() => {})
+  }, [focus?.documentId, focus?.passage, focus?.page])
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 250)
@@ -52,7 +77,7 @@ export function DocumentsPanel() {
       })
       .catch(() => setError('Could not load documents.'))
       .finally(() => setLoading(false))
-  }, [offset, typeFilter, returnFilter, debouncedSearch])
+  }, [offset, typeFilter, returnFilter, debouncedSearch, refreshKey])
 
   const pageStart = total === 0 ? 0 : offset + 1
   const pageEnd = Math.min(offset + PAGE_SIZE, total)
@@ -134,8 +159,17 @@ export function DocumentsPanel() {
           )}
           {!loading && items.length === 0 && !error && (
             <li className="p-6 text-center text-sm text-stone-500">
-              No documents match your filters. Ingest unstructured data into{' '}
-              <code className="text-xs">document_metadata</code>.
+              <p>No documents in the catalog yet.</p>
+              {onRequestBootstrap && (
+                <button
+                  type="button"
+                  disabled={bootstrapping}
+                  onClick={onRequestBootstrap}
+                  className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                >
+                  {bootstrapping ? 'Loading…' : 'Load & index documents'}
+                </button>
+              )}
             </li>
           )}
           {items.map((doc) => {
@@ -169,7 +203,11 @@ export function DocumentsPanel() {
       </div>
 
       <div className="min-h-[50vh] min-w-0 flex-1 xl:min-h-0">
-        <BrowserDocumentPreview doc={selected} />
+        <BrowserDocumentPreview
+          doc={selected}
+          highlightPassage={highlightPassage}
+          highlightPage={highlightPage}
+        />
       </div>
     </div>
   )

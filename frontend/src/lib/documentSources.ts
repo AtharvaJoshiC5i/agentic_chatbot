@@ -19,6 +19,13 @@ export function mergeDocumentSources(
   fromApi: DocumentHit[] | undefined,
   toolEvents: ToolEvent[],
 ): DocumentHit[] {
-  if (fromApi && fromApi.length > 0) return fromApi
-  return documentSourcesFromToolEvents(toolEvents)
+  const seen = new Set<string>()
+  const out: DocumentHit[] = []
+  for (const hit of [...(fromApi ?? []), ...documentSourcesFromToolEvents(toolEvents)]) {
+    const key = `${hit.document_id}:${(hit.passage || '').slice(0, 120)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(hit)
+  }
+  return out
 }

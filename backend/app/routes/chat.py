@@ -10,6 +10,7 @@ from app.database.session import get_db
 from app.llm.router import is_provider_configured, model_name_for, normalize_provider
 from app.schemas.chat import (
     AgentStepOut,
+    CitationOut,
     ChatRequest,
     ChatResponse,
     DocumentSourceOut,
@@ -73,6 +74,7 @@ def post_chat(
         agent_steps=[AgentStepOut.model_validate(s) for s in result.get("agent_steps") or []],
         supporting_evidence=supporting,
         document_sources=supporting.documents,
+        citations=[CitationOut.model_validate(c) for c in result.get("citations") or []],
         visuals=result.get("visuals") or [],
         llm_provider=provider,
         llm_model=model_name_for(provider),

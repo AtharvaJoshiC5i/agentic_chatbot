@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import type { WorkspaceQueueItem } from '../../api/types'
+import { analystAgentPrompt, genericAgentPrompt } from '../../lib/workflowAgent'
 import { Badge } from '../ui/Badge'
 import { formatDateTime, formatInrFromPaise, humanize } from '../../lib/format'
-import { button } from '../ui/styles'
+import { AskAgentLink } from './AskAgentLink'
 
 function severityTone(severity: string | null | undefined): 'danger' | 'warning' | 'neutral' | 'accent' {
   if (severity === 'critical' || severity === 'high') return 'danger'
@@ -12,17 +12,17 @@ function severityTone(severity: string | null | undefined): 'danger' | 'warning'
   return 'accent'
 }
 
-function agentLink(returnId: string | null | undefined): string | null {
-  if (!returnId) return null
-  return `/workspace?return=${encodeURIComponent(returnId)}`
-}
-
 type RowExtras = {
   trailing?: ReactNode
 }
 
 function QueueRow({ item, extras }: { item: WorkspaceQueueItem; extras?: RowExtras }) {
-  const link = agentLink(item.return_id)
+  const rid = item.return_id
+  const draft = rid
+    ? item.workflow_stage
+      ? analystAgentPrompt(item.workflow_stage, item.requested_resolution)
+      : genericAgentPrompt(rid, item.workflow_stage)
+    : ''
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -49,11 +49,7 @@ function QueueRow({ item, extras }: { item: WorkspaceQueueItem; extras?: RowExtr
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         {extras?.trailing}
-        {link && (
-          <Link to={link} className={button('secondary', 'sm')}>
-            Open in agent
-          </Link>
-        )}
+        {rid && draft && <AskAgentLink returnId={rid} draftMessage={draft} variant="secondary" />}
       </div>
     </li>
   )

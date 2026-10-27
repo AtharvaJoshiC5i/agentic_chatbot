@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { parseDataExplorerSearch } from '../lib/dataExplorerNav'
 import { api } from '../api/client'
 import type { DataBrowserOverview } from '../api/types'
+import { useToast } from '../context/ToastContext'
 import { DocumentsPanel } from '../components/data-browser/DocumentsPanel'
 import { StructuredDataPanel } from '../components/data-browser/StructuredDataPanel'
 import { WorkspaceNav } from '../components/layout/WorkspaceNav'
@@ -9,12 +12,49 @@ import { panelTitle, segmentedTab } from '../components/ui/styles'
 type Tab = 'structured' | 'documents'
 
 export function DataBrowserPage() {
-  const [tab, setTab] = useState<Tab>('structured')
+  const { showToast } = useToast()
+  const [searchParams] = useSearchParams()
+  const explorerFocus = useMemo(
+    () => parseDataExplorerSearch(searchParams.toString()),
+    [searchParams],
+  )
+  const [tab, setTab] = useState<Tab>(explorerFocus.tab)
   const [overview, setOverview] = useState<DataBrowserOverview | null>(null)
+  const [bootstrapping, setBootstrapping] = useState(false)
+  const [docListKey, setDocListKey] = useState(0)
 
-  useEffect(() => {
+  const refreshOverview = useCallback(() => {
     api.dataBrowserOverview().then(setOverview).catch(() => setOverview(null))
   }, [])
+
+  useEffect(() => {
+    refreshOverview()
+  }, [refreshOverview])
+
+  useEffect(() => {
+    setTab(explorerFocus.tab)
+  }, [explorerFocus.tab])
+
+  const runDocumentBootstrap = async () => {
+    setBootstrapping(true)
+    try {
+      const res = await api.dataBrowserDocumentsBootstrap()
+      if (res.ok) {
+        showToast(
+          `Loaded ${res.metadata_count} documents (${res.chroma_chunk_count} search chunks indexed).`,
+        )
+        refreshOverview()
+        setDocListKey((k) => k + 1)
+        setTab('documents')
+      } else {
+        showToast(res.errors[0] ?? 'Document bootstrap failed')
+      }
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Document bootstrap failed')
+    } finally {
+      setBootstrapping(false)
+    }
+  }
 
   return (
     <div className="workspace-shell flex h-dvh flex-col overflow-hidden font-sans text-stone-900">
@@ -39,6 +79,42 @@ export function DataBrowserPage() {
               {overview.database_file}
             </code>
             {overview.database_file_exists ? '' : ' (file not found — run load_database.py)'}
+          </p>
+        )}
+        {overview && overview.document_count === 0 && overview.structured_row_count > 0 && (
+          <div
+            className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            <p className="font-medium">Unstructured documents are not loaded yet</p>
+            <p className="mt-1 text-amber-900/90">
+              {overview.documents_status_message ||
+                'Load the document catalog from data/unstructured and index it for the agent.'}
+            </p>
+            <button
+              type="button"
+              disabled={bootstrapping}
+              onClick={() => runDocumentBootstrap()}
+              className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+            >
+              {bootstrapping ? 'Indexing…' : 'Load & index documents'}
+            </button>
+            <p className="mt-2 text-xs text-amber-800/80">
+              CLI: <code className="rounded bg-amber-100/80 px-1">python scripts/bootstrap_documents.py</code>
+            </p>
+          </div>
+        )}
+        {overview && !overview.documents_ready && overview.document_count > 0 && (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            {overview.documents_status_message}{' '}
+            <button
+              type="button"
+              className="font-medium underline"
+              disabled={bootstrapping}
+              onClick={() => runDocumentBootstrap()}
+            >
+              Re-index for search
+            </button>
           </p>
         )}
         {overview && (
@@ -86,7 +162,16 @@ export function DataBrowserPage() {
       </div>
 
       <main className="workspace-main min-h-0 flex-1 overflow-hidden">
-        {tab === 'structured' ? <StructuredDataPanel /> : <DocumentsPanel />}
+        {tab === 'structured' ? (
+          <StructuredDataPanel focus={explorerFocus.structured ?? null} />
+        ) : (
+          <DocumentsPanel
+            refreshKey={docListKey}
+            focus={explorerFocus.document ?? null}
+            onRequestBootstrap={runDocumentBootstrap}
+            bootstrapping={bootstrapping}
+          />
+        )}
       </main>
     </div>
   )

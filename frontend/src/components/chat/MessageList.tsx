@@ -1,10 +1,9 @@
 import type { AgentStep } from '../../api/types'
 import type { ChatMessage } from '../../lib/chats'
-import type { ChatVisual } from '../../lib/visuals'
 import { resolveMessageEvidence } from '../../lib/supportingEvidence'
+import { stripAssistantReferencesFooter } from '../../lib/stripReferences'
 import { BrandMark } from '../ui/BrandMark'
 import { AgentThinkingPlaceholder, AgentTrace } from './AgentTrace'
-import { ChatVisuals } from './visuals/ChatVisuals'
 import { MarkdownBody, StreamingMarkdown } from './MarkdownBody'
 import { SupportingEvidence } from './SupportingEvidence'
 
@@ -22,13 +21,11 @@ export function MessageList({
   pending,
   liveAgentSteps,
   streamingContent,
-  onUpdateMessageVisuals,
 }: {
   messages: ChatMessage[]
   pending: boolean
   liveAgentSteps: AgentStep[]
   streamingContent: string | null
-  onUpdateMessageVisuals?: (messageId: string, visuals: ChatVisual[]) => void
 }) {
   const isStreaming = pending && streamingContent !== null
   const showStreamText = isStreaming && streamingContent.length > 0
@@ -47,27 +44,10 @@ export function MessageList({
             {msg.agentSteps && msg.agentSteps.length > 0 && (
               <AgentTrace steps={msg.agentSteps} showFinalLabel={Boolean(msg.content)} />
             )}
-            {msg.content ? <MarkdownBody content={msg.content} /> : null}
-            {msg.visuals && msg.visuals.length > 0 && (
-              <ChatVisuals
-                visuals={msg.visuals}
-                onVisualAtIndex={
-                  onUpdateMessageVisuals
-                    ? (index, next) => {
-                        const updated = msg.visuals!.map((item, j) => (j === index ? next : item))
-                        onUpdateMessageVisuals(msg.id, updated)
-                      }
-                    : undefined
-                }
-              />
-            )}
+            {msg.content ? (
+              <MarkdownBody content={stripAssistantReferencesFooter(msg.content)} />
+            ) : null}
             <SupportingEvidence bundle={resolveMessageEvidence(msg)} />
-            {msg.provider && (
-              <p className="mt-1 text-[11px] text-stone-400">
-                {msg.provider}
-                {msg.model ? ` · ${msg.model}` : ''}
-              </p>
-            )}
           </AssistantRow>
         ),
       )}

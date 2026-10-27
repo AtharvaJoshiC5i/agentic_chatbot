@@ -250,7 +250,6 @@ def build_analyst_work_queue(session: Session, *, limit: int = 300) -> list[dict
             }
         )
 
-    items.sort(key=lambda x: (_stage_rank(x["workflow_stage"]), x["return_id"]))
     return items[:limit]
 
 

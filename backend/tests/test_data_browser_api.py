@@ -49,6 +49,15 @@ def test_data_browser_lists_tables_and_documents(populated_db) -> None:
     assert payload["table_name"] == "returns"
     assert payload["total"] >= 1
     assert "return_id" in payload["columns"]
+    sample_rid = payload["rows"][0]["return_id"]
+    matched = client.get(
+        f"/api/data-browser/tables/returns/rows?col=return_id&val={sample_rid}",
+        headers=headers,
+    )
+    assert matched.status_code == 200
+    match_body = matched.json()
+    assert match_body["matched"]["column"] == "return_id"
+    assert match_body["rows"][0]["return_id"] == sample_rid
 
     docs = client.get("/api/data-browser/documents?limit=10", headers=headers)
     assert docs.status_code == 200

@@ -122,6 +122,11 @@ class Settings(BaseSettings):
         default=30,
         validation_alias=AliasChoices("MONITORING_INTERVAL_MINUTES"),
     )
+    documents_auto_bootstrap: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("DOCUMENTS_AUTO_BOOTSTRAP"),
+        description="On API startup, load document catalog + Chroma index when document_metadata is empty.",
+    )
 
     @field_validator("log_level")
     @classmethod

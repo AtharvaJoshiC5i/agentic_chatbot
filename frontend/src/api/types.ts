@@ -1,4 +1,3 @@
-import type { ChatVisual } from '../lib/visuals'
 export type TokenResponse = {
   access_token: string
   token_type: string
@@ -187,6 +186,12 @@ export type WorkspaceQueueItem = {
     description: string
     source_type: string
   }>
+  last_activity_at?: string | null
+  last_update_summary?: string | null
+  last_update_actor?: string | null
+  last_update_actor_label?: string | null
+  handoff_from_other?: boolean | null
+  is_highlighted?: boolean | null
 }
 
 export type CustomerNotificationOut = {
@@ -269,6 +274,18 @@ export type RecoveryRecommendationOut = {
   ranked_options: RankedRecoveryOptionOut[]
 }
 
+export type ReturnWorkflowOut = {
+  return_id: string
+  status_summary: string
+  analyst_workflow_stage?: string | null
+  analyst_workflow_stage_label?: string | null
+  warehouse_queue_stage?: string | null
+  next_warehouse_step?: string | null
+  warehouse_work_complete?: boolean
+  next_owner?: string | null
+  analyst_next_action?: string | null
+}
+
 export type LlmProviderId = 'groq' | 'gemini' | 'nvidia'
 
 export type LlmProviderOption = {
@@ -327,9 +344,19 @@ export type DocumentHit = {
   filename: string
   file_path: string
   page_or_section?: string | null
+  page?: number | null
   passage: string
   relevance_score?: number | null
   file_kind: string
+}
+
+export type Citation = {
+  index: number
+  kind: string
+  label: string
+  path: string
+  table_name?: string | null
+  document_id?: number | null
 }
 
 export type DocumentPreviewSegment = {
@@ -346,6 +373,29 @@ export type DataBrowserOverview = {
   structured_row_count: number
   document_count: number
   document_types: string[]
+  documents_ready?: boolean
+  documents_status_message?: string
+}
+
+export type DocumentCatalogStatus = {
+  manifest_exists: boolean
+  manifest_path: string
+  return_count: number
+  metadata_count: number
+  chroma_chunk_count: number
+  ready: boolean
+  message: string
+}
+
+export type DocumentBootstrapResult = {
+  ok: boolean
+  metadata_count: number
+  chroma_chunk_count: number
+  errors: string[]
+  manifest_rows_inserted: number
+  documents_processed: number
+  chunks_indexed: number
+  ingest_failures: string[]
 }
 
 export type StructuredTableSummary = {
@@ -359,6 +409,11 @@ export type StructuredTableListResponse = {
   tables: StructuredTableSummary[]
 }
 
+export type StructuredRowMatch = {
+  column: string
+  value: string
+}
+
 export type StructuredTableRowsResponse = {
   table_name: string
   label: string
@@ -367,6 +422,7 @@ export type StructuredTableRowsResponse = {
   total: number
   limit: number
   offset: number
+  matched?: StructuredRowMatch | null
 }
 
 export type DocumentBrowserItem = {
@@ -407,9 +463,9 @@ export type ChatResponse = {
   final_response: string
   tool_events: Record<string, unknown>[]
   agent_steps?: AgentStep[]
-  visuals?: ChatVisual[]
   supporting_evidence?: SupportingEvidence
   document_sources?: DocumentHit[]
+  citations?: Citation[]
   llm_provider: string
   llm_model: string
 }

@@ -16,6 +16,7 @@ DOCUMENT_TOOL_NAMES = frozenset(
         "search_supplier_reports",
         "search_refurbishment_guidelines",
         "resolve_applicable_policy",
+        "run_return_investigation",
     }
 )
 
@@ -32,11 +33,19 @@ def _normalize_hit(raw: dict[str, Any]) -> dict[str, Any] | None:
     passage = raw.get("passage") or ""
     if document_id is None or not filename:
         return None
+    page_raw = raw.get("page")
+    page: int | None = None
+    if page_raw is not None:
+        try:
+            page = int(page_raw)
+        except (TypeError, ValueError):
+            page = None
     return {
         "document_id": int(document_id),
         "filename": str(filename),
         "file_path": str(file_path),
         "page_or_section": raw.get("page_or_section"),
+        "page": page if page and page > 0 else None,
         "passage": str(passage),
         "relevance_score": raw.get("relevance_score"),
         "file_kind": _file_kind(str(filename)),
@@ -65,6 +74,13 @@ def parse_document_hits(tool_name: str, content: Any) -> list[dict[str, Any]]:
                 if hit:
                     hits.append(hit)
     elif isinstance(payload, dict):
+        embedded = payload.get("document_sources")
+        if isinstance(embedded, list):
+            for item in embedded:
+                if isinstance(item, dict):
+                    hit = _normalize_hit(item)
+                    if hit:
+                        hits.append(hit)
         policy = payload.get("policy")
         if isinstance(policy, dict):
             hit = _normalize_hit(

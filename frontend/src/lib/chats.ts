@@ -1,5 +1,4 @@
-import type { ChatVisual } from './visuals'
-import type { AgentStep, DocumentHit, SupportingEvidence } from '../api/types'
+import type { AgentStep, Citation, DocumentHit, SupportingEvidence } from '../api/types'
 import { chatStorageKey, importLegacyConversationsIfNeeded, normalizeChatAccount } from './chatAccount'
 
 export type ToolEvent = {
@@ -15,9 +14,9 @@ export type ChatMessage = {
   content: string
   toolEvents?: ToolEvent[]
   agentSteps?: AgentStep[]
-  visuals?: ChatVisual[]
   documentSources?: DocumentHit[]
   supportingEvidence?: SupportingEvidence
+  citations?: Citation[]
   provider?: string
   model?: string
   createdAt: string
@@ -84,7 +83,7 @@ export function createMessage(
   extra?: Partial<
     Pick<
       ChatMessage,
-      'toolEvents' | 'agentSteps' | 'visuals' | 'documentSources' | 'supportingEvidence' | 'provider' | 'model'
+      'toolEvents' | 'agentSteps' | 'documentSources' | 'supportingEvidence' | 'citations' | 'provider' | 'model'
     >
   >,
 ): ChatMessage {
@@ -101,4 +100,18 @@ export function titleFromMessage(text: string): string {
   const t = text.trim().replace(/\s+/g, ' ')
   if (t.length <= 48) return t || 'New conversation'
   return `${t.slice(0, 45)}…`
+}
+
+export function normalizeReturnId(id: string): string | null {
+  const rid = id.trim().toUpperCase()
+  return /^R\d+$/.test(rid) ? rid : null
+}
+
+export function findConversationByReturnId(
+  conversations: Conversation[],
+  returnId: string,
+): Conversation | undefined {
+  const rid = normalizeReturnId(returnId)
+  if (!rid) return undefined
+  return conversations.find((c) => c.returnId?.toUpperCase() === rid)
 }

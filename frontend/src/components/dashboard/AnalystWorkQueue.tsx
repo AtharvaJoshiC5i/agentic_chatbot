@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { WorkspaceDashboardOut, WorkspaceQueueItem } from '../../api/types'
+import { analystAgentPrompt } from '../../lib/workflowAgent'
 import { humanize } from '../../lib/format'
 import { button } from '../ui/styles'
 import { Badge } from '../ui/Badge'
+import { AskAgentLink } from './AskAgentLink'
+import { QueueUpdateHint } from './QueueUpdateHint'
 import { DeclineForm, NotificationReview } from './RowActions'
 
 const STAGE_FILTERS: { id: string; label: string; match: (s: string) => boolean }[] = [
@@ -25,56 +27,6 @@ function stageTone(stage: string | null | undefined): 'accent' | 'warning' | 'ne
   return 'neutral'
 }
 
-function agentHref(returnId: string, stage: string | undefined): string {
-  const base = `/workspace?return=${encodeURIComponent(returnId)}`
-  if (stage === 'investigate') return `${base}&intent=investigate`
-  if (stage === 'submit_refund') return `${base}&intent=refund`
-  if (stage === 'submit_replacement') return `${base}&intent=replacement`
-  if (stage === 'customer_follow_up') return `${base}&intent=customer`
-  if (stage === 'await_warehouse') return `${base}&intent=warehouse`
-  if (stage === 'decline_request') return `${base}&intent=decline`
-  return base
-}
-
-function suggestedPrompt(stage: string | undefined, resolution: string | null | undefined): string {
-  switch (stage) {
-    case 'investigate':
-      return (
-        'Run the investigation and check the applicable company policy before any handoff. If a definite policy rule fails, explain the evidence and decline the return with the policy basis; do not send it to warehouse. If eligible, open a warehouse inspection case; if the data is incomplete or inconsistent, identify what is missing. Do not submit refund or replacement yet.'
-      )
-    case 'await_warehouse':
-      return (
-        'Call get_return_workflow_status for this return first. Say whether the warehouse has inspected the unit ' +
-        'and given its verdict. I can only submit to the supervisor after a verdict that says proceed. ' +
-        'Do not open a duplicate case.'
-      )
-    case 'decline_request':
-      return (
-        'Call get_return_workflow_status. The warehouse says this request cannot be performed. Summarise their ' +
-        'reason, then ask me to confirm before using decline_return_request with that reason.'
-      )
-    case 'submit_refund':
-      return (
-        'Using inspection results and calculate_refundable_amount, submit a refund request for the ' +
-        'remaining refundable amount if eligible. Do not approve payout yourself.'
-      )
-    case 'submit_replacement':
-      return (
-        'Using inspection results and return details, submit a replacement request for supervisor ' +
-        'approval. Do not approve dispatch yourself.'
-      )
-    case 'await_supervisor':
-      return `What is the status of my pending supervisor approval for this return (${resolution ?? 'refund or replacement'})?`
-    case 'customer_follow_up':
-      return (
-        'Call list_customer_notifications for this return and show me the drafted customer email. ' +
-        'After I confirm, record the message confirmation with send_customer_notification so the case closes. This demo does not deliver email.'
-      )
-    default:
-      return 'Summarize this return and the next step in the analyst workflow.'
-  }
-}
-
 export function AnalystWorkQueue({ data, onRefresh }: { data: WorkspaceDashboardOut; onRefresh: () => void }) {
   const [filter, setFilter] = useState('all')
   const queue = data.sections.find((s) => s.key === 'work_queue')?.items ?? []
@@ -92,7 +44,7 @@ export function AnalystWorkQueue({ data, onRefresh }: { data: WorkspaceDashboard
             Return requests
           </h2>
           <p className="mt-0.5 text-xs text-stone-500">
-            Investigate → open case → warehouse inspects → submit refund or replacement → confirm customer message.
+            Policy check → inspection case or policy decline → warehouse verdict → supervisor → customer message.
           </p>
         </div>
       </div>
@@ -149,7 +101,7 @@ function QueueRow({ row, onRefresh }: { row: WorkspaceQueueItem; onRefresh: () =
   const [open, setOpen] = useState(false)
   const stage = row.workflow_stage ?? 'investigate'
   const rid = row.return_id ?? row.title
-  const prompt = suggestedPrompt(stage, row.requested_resolution)
+  const prompt = analystAgentPrompt(stage, row.requested_resolution)
 
   return (
     <tr className="transition-colors hover:bg-stone-50/80">
@@ -180,10 +132,9 @@ function QueueRow({ row, onRefresh }: { row: WorkspaceQueueItem; onRefresh: () =
                 Review message
               </button>
             )}
-            <Link to={agentHref(rid, stage)} state={{ draftMessage: prompt }} className={button('primary', 'sm')}>
-              Open agent
-            </Link>
+            <AskAgentLink returnId={rid} draftMessage={prompt} />
           </div>
+          <QueueUpdateHint row={row} />
           {row.warehouse_notes && stage === 'decline_request' && (
             <p className="max-w-xs text-right text-xs text-stone-500">Warehouse: {row.warehouse_notes}</p>
           )}

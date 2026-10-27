@@ -19,6 +19,7 @@ def main() -> int:
     from app.synthetic.generator import generate_synthetic_data
     from app.synthetic.ground_truth import write_ground_truth_files
     from app.synthetic.loader import load_bundle
+    from app.synthetic.serial_repair import align_single_quantity_product_unit_serials
     from app.synthetic.validate import validate_loaded_database
 
     settings = get_settings()
@@ -27,11 +28,20 @@ def main() -> int:
     bundle = generate_synthetic_data()
     write_ground_truth_files()
 
+    from app.rag.ingest import ingest_all_documents
+    from app.rag.store import collection_document_count
+
     session = get_session_maker()()
+    ingest_report = None
     try:
         load_bundle(session, bundle)
+        aligned = align_single_quantity_product_unit_serials(session)
+        if aligned:
+            print(f"Aligned {aligned} product_unit serial(s) with order-line purchased serials.")
         report = validate_loaded_database(session)
         document_report = load_document_metadata_from_manifest(session)
+        if report.ok and document_report.ok:
+            ingest_report = ingest_all_documents(session, reset_index=True)
     finally:
         session.close()
 
@@ -54,9 +64,19 @@ def main() -> int:
     for warning in report.warnings:
         print(f"Warning: {warning}")
 
+    if ingest_report and ingest_report.failures:
+        print("Vector ingest warnings:", file=sys.stderr)
+        for failure in ingest_report.failures[:10]:
+            print(f"  - {failure}", file=sys.stderr)
+
     print(f"Loaded structured data into {settings.sqlite_database_path}")
     print(f"Returns: {len(bundle.returns)} | Inspections: {len(bundle.inspections)} | Refunds: {len(bundle.refunds)}")
     print(f"Documents: {document_report.rows_inserted}")
+    if ingest_report:
+        print(
+            f"Chroma: {ingest_report.chunks_indexed} chunks from {ingest_report.documents_processed} files "
+            f"(collection count={collection_document_count()})"
+        )
     return 0
 
 

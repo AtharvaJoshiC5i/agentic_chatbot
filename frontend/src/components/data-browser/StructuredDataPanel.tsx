@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Table2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { StructuredTableRowsResponse, StructuredTableSummary } from '../../api/types'
+import type { StructuredDeepLink } from '../../lib/dataExplorerNav'
 
 const PAGE_SIZE = 50
 
@@ -52,7 +53,12 @@ function RecordDrawer({
   )
 }
 
-export function StructuredDataPanel() {
+function rowIsFocused(row: Record<string, string>, focus: StructuredDeepLink | null): boolean {
+  if (!focus?.column) return false
+  return row[focus.column] === focus.value
+}
+
+export function StructuredDataPanel({ focus = null }: { focus?: StructuredDeepLink | null }) {
   const [tables, setTables] = useState<StructuredTableSummary[]>([])
   const [activeTable, setActiveTable] = useState<string | null>(null)
   const [rowsPayload, setRowsPayload] = useState<StructuredTableRowsResponse | null>(null)
@@ -61,6 +67,14 @@ export function StructuredDataPanel() {
   const [loadingRows, setLoadingRows] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedRow, setSelectedRow] = useState<Record<string, string> | null>(null)
+  const [activeFocus, setActiveFocus] = useState<StructuredDeepLink | null>(null)
+
+  useEffect(() => {
+    if (focus?.table) {
+      setActiveTable(focus.table)
+      setOffset(0)
+    }
+  }, [focus?.table, focus?.column, focus?.value])
 
   useEffect(() => {
     setLoadingTables(true)
@@ -69,33 +83,63 @@ export function StructuredDataPanel() {
       .then((res) => {
         setTables(res.tables)
         if (res.tables.length) {
-          setActiveTable((prev) => prev ?? res.tables[0].name)
+          setActiveTable((prev) => {
+            if (prev) return prev
+            if (focus?.table && res.tables.some((t) => t.name === focus.table)) return focus.table
+            return res.tables[0].name
+          })
         }
       })
       .catch(() => setError('Could not load tables.'))
       .finally(() => setLoadingTables(false))
-  }, [])
+  }, [focus?.table])
 
-  const loadRows = useCallback((table: string, pageOffset: number) => {
-    setLoadingRows(true)
-    setError(null)
-    api
-      .dataBrowserTableRows(table, { limit: PAGE_SIZE, offset: pageOffset })
-      .then(setRowsPayload)
-      .catch(() => setError('Could not load table rows.'))
-      .finally(() => setLoadingRows(false))
-  }, [])
+  const loadRows = useCallback(
+    (table: string, pageOffset: number, match?: { col: string; val: string }) => {
+      setLoadingRows(true)
+      setError(null)
+      api
+        .dataBrowserTableRows(table, {
+          limit: PAGE_SIZE,
+          offset: pageOffset,
+          col: match?.col,
+          val: match?.val,
+        })
+        .then((payload) => {
+          setRowsPayload(payload)
+          if (payload.matched && payload.rows[0]) {
+            setSelectedRow(payload.rows[0])
+            setActiveFocus({
+              table: payload.table_name,
+              column: payload.matched.column,
+              value: payload.matched.value,
+            })
+          }
+        })
+        .catch(() => setError('Could not load table rows.'))
+        .finally(() => setLoadingRows(false))
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!activeTable) return
-    loadRows(activeTable, offset)
-  }, [activeTable, offset, loadRows])
+    const deep =
+      focus?.table === activeTable && focus.column && focus.value && offset === 0
+        ? { col: focus.column, val: focus.value }
+        : undefined
+    if (!deep) setActiveFocus(null)
+    loadRows(activeTable, offset, deep)
+  }, [activeTable, offset, loadRows, focus?.table, focus?.column, focus?.value])
 
   function selectTable(name: string) {
     setActiveTable(name)
     setOffset(0)
     setSelectedRow(null)
+    setActiveFocus(null)
   }
+
+  const highlight = activeFocus?.table === activeTable ? activeFocus : null
 
   const total = rowsPayload?.total ?? 0
   const pageStart = total === 0 ? 0 : offset + 1
@@ -195,7 +239,9 @@ export function StructuredDataPanel() {
                 {rowsPayload.rows.map((row, ri) => (
                   <tr
                     key={ri}
-                    className="cursor-pointer text-stone-800 hover:bg-stone-50"
+                    className={`cursor-pointer text-stone-800 hover:bg-stone-50 ${
+                      rowIsFocused(row, highlight) ? 'bg-amber-50/90 ring-1 ring-inset ring-amber-300/80' : ''
+                    }`}
                     onClick={() => setSelectedRow(row)}
                   >
                     {rowsPayload.columns.map((col) => (

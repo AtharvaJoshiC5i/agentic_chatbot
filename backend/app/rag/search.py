@@ -42,6 +42,7 @@ class DocumentSearchResult:
             "filename": self.filename,
             "file_path": self.file_path,
             "page_or_section": self.section or (f"Page {self.page}" if self.page else None),
+            "page": self.page,
             "passage": self.passage,
             "relevance_score": self.relevance_score,
         }

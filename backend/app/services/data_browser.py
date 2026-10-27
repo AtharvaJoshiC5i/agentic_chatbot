@@ -122,12 +122,24 @@ def list_structured_tables(session: Session) -> list[dict[str, Any]]:
     return summaries
 
 
+def _row_to_dict(mapping: Any, visible_columns: list[str]) -> dict[str, str]:
+    row: dict[str, str] = {}
+    for col in visible_columns:
+        if col in SENSITIVE_COLUMNS:
+            row[col] = "[redacted]"
+        else:
+            row[col] = _serialize_cell(mapping.get(col))
+    return row
+
+
 def get_structured_table_rows(
     session: Session,
     table_name: str,
     *,
     limit: int,
     offset: int,
+    match_column: str | None = None,
+    match_value: str | None = None,
 ) -> dict[str, Any]:
     name = _validate_table_name(table_name)
     table = Base.metadata.tables[name]
@@ -142,6 +154,31 @@ def get_structured_table_rows(
     elif columns:
         order_col = table.columns[columns[0]]
 
+    matched: dict[str, str] | None = None
+    if match_column and match_value is not None:
+        col_name = match_column.strip()
+        if col_name not in visible_columns:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown column: {col_name}",
+            )
+        col = table.columns[col_name]
+        raw = session.execute(
+            select(table).where(col == match_value.strip()).limit(1)
+        ).mappings().first()
+        if raw is not None:
+            matched = {"column": col_name, "value": match_value.strip()}
+            return {
+                "table_name": name,
+                "label": TABLE_LABELS.get(name, name.replace("_", " ").title()),
+                "columns": visible_columns,
+                "rows": [_row_to_dict(raw, visible_columns)],
+                "total": int(total),
+                "limit": limit,
+                "offset": offset,
+                "matched": matched,
+            }
+
     stmt = select(table)
     if order_col is not None:
         stmt = stmt.order_by(order_col)
@@ -150,13 +187,7 @@ def get_structured_table_rows(
 
     rows: list[dict[str, str]] = []
     for mapping in raw_rows:
-        row: dict[str, str] = {}
-        for col in visible_columns:
-            if col in SENSITIVE_COLUMNS:
-                row[col] = "[redacted]"
-            else:
-                row[col] = _serialize_cell(mapping.get(col))
-        rows.append(row)
+        rows.append(_row_to_dict(mapping, visible_columns))
 
     return {
         "table_name": name,
@@ -166,10 +197,13 @@ def get_structured_table_rows(
         "total": int(total),
         "limit": limit,
         "offset": offset,
+        "matched": matched,
     }
 
 
 def get_overview(session: Session) -> dict[str, Any]:
+    from app.services.document_bootstrap import get_document_catalog_status
+
     tables = list_structured_tables(session)
     structured_row_count = sum(t["row_count"] for t in tables)
     doc_total = session.execute(select(func.count()).select_from(DocumentMetadata)).scalar_one()
@@ -180,6 +214,7 @@ def get_overview(session: Session) -> dict[str, Any]:
     ).all()
     settings = get_settings()
     db_path = settings.sqlite_database_path
+    doc_status = get_document_catalog_status(session)
     return {
         "structured_table_count": len(tables),
         "structured_row_count": structured_row_count,
@@ -188,6 +223,8 @@ def get_overview(session: Session) -> dict[str, Any]:
         "database_url": settings.database_url,
         "database_file": str(db_path) if db_path is not None else None,
         "database_file_exists": bool(db_path and db_path.is_file()),
+        "documents_ready": doc_status.ready,
+        "documents_status_message": doc_status.message,
     }
 
 
@@ -199,10 +236,14 @@ def list_documents(
     document_type: str | None = None,
     return_id: str | None = None,
     search: str | None = None,
+    document_id: int | None = None,
 ) -> dict[str, Any]:
     stmt = select(DocumentMetadata)
     count_stmt = select(func.count()).select_from(DocumentMetadata)
 
+    if document_id is not None:
+        stmt = stmt.where(DocumentMetadata.document_id == document_id)
+        count_stmt = count_stmt.where(DocumentMetadata.document_id == document_id)
     if document_type:
         document_type = document_type.strip().lower()
         stmt = stmt.where(DocumentMetadata.document_type == document_type)

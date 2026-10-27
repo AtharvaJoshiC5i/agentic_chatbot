@@ -12,6 +12,20 @@ def test_parse_return_details_evidence() -> None:
     assert items[0]["rows"][0]["return_id"] == "R102"
 
 
+def test_parse_customer_notifications_expands_rows() -> None:
+    preview = (
+        '{"count":1,"notifications":[{"notification_id":5,"return_id":"R200",'
+        '"kind":"refund_approved","to_email":"a@example.com","subject":"Refund approved",'
+        '"body":"Hello","status":"draft"}]}'
+    )
+    items = parse_structured_evidence("list_customer_notifications", preview)
+    assert len(items) == 1
+    assert items[0]["table_name"] == "customer_notifications"
+    assert len(items[0]["rows"]) == 1
+    assert items[0]["rows"][0]["return_id"] == "R200"
+    assert "notifications" not in items[0]["columns"] or items[0]["rows"][0].get("subject") == "Refund approved"
+
+
 def test_build_supporting_evidence_merges_documents() -> None:
     events = [
         {

@@ -294,11 +294,12 @@ def generate_synthetic_data(seed: int = RANDOM_SEED) -> SyntheticDataBundle:
         )
         if serial:
             for unit_offset in range(quantity):
+                unit_serial = serial if quantity == 1 else f"{serial}-{unit_offset + 1}"
                 bundle.product_units.append(
                     {
                         "product_unit_id": len(bundle.product_units) + 1,
                         "order_item_id": order_item_id,
-                        "serial_number": f"{serial}-{unit_offset + 1}",
+                        "serial_number": unit_serial,
                         "unit_status": ProductUnitStatus.DELIVERED.value,
                     }
                 )

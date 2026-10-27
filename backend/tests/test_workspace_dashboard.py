@@ -42,8 +42,8 @@ def test_workspace_dashboard_analyst(populated_db) -> None:
     assert "work_queue" in keys
     items = [i for s in body["sections"] if s["key"] == "work_queue" for i in s["items"]]
     assert body["kpis"]["your_move"] == len([i for i in items if i["your_move"]])
-    moves = [bool(i["your_move"]) for i in items]
-    assert moves == sorted(moves, reverse=True) or moves.count(True) > 0  # actionable work is listed first
+    if items:
+        assert "last_activity_at" in items[0] or items[0].get("last_update_summary") is None
 
 
 def test_workspace_dashboard_warehouse(populated_db) -> None:
@@ -55,7 +55,7 @@ def test_workspace_dashboard_warehouse(populated_db) -> None:
     assert body["kpis"]["queue_total"] >= 0
     assert "awaiting_receipt" in body["kpis"]
     keys = {s["key"] for s in body["sections"]}
-    assert keys == {"warehouse_handoffs"}
+    assert "warehouse_handoffs" in keys
 
 
 def test_workspace_dashboard_supervisor(populated_db) -> None:
@@ -65,6 +65,10 @@ def test_workspace_dashboard_supervisor(populated_db) -> None:
     body = res.json()
     assert body["persona"] == "returns_supervisor"
     assert "queue_total" in body["kpis"]
+    assert "queue_shown" in body["kpis"]
     assert "pending_refunds" in body["kpis"]
+    assert body["kpis"]["queue_shown"] <= 50
     keys = {s["key"] for s in body["sections"]}
-    assert keys == {"approval_queue"}
+    assert "approval_queue" in keys
+    approval = [i for s in body["sections"] if s["key"] == "approval_queue" for i in s["items"]]
+    assert len(approval) <= 50

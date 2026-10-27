@@ -1,14 +1,24 @@
 import { ChevronDown, ExternalLink, FileText } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import type { DocumentBrowserItem, DocumentPreview } from '../../api/types'
 import { openDocumentInNewTab } from '../../lib/documentFile'
 import { DocumentFileIcon } from '../chat/DocumentFileIcon'
+import { HighlightedPassage } from '../chat/HighlightedPassage'
 import { DocumentNativePreview } from '../documents/DocumentNativePreview'
 
-export function BrowserDocumentPreview({ doc }: { doc: DocumentBrowserItem | null }) {
+export function BrowserDocumentPreview({
+  doc,
+  highlightPassage,
+  highlightPage,
+}: {
+  doc: DocumentBrowserItem | null
+  highlightPassage?: string
+  highlightPage?: number
+}) {
+  const highlightRef = useRef<HTMLDivElement | null>(null)
   const [extracted, setExtracted] = useState<DocumentPreview | null>(null)
-  const [showExtracted, setShowExtracted] = useState(false)
+  const [showExtracted, setShowExtracted] = useState(Boolean(highlightPassage?.trim()))
 
   const docId = doc?.document_id
 
@@ -30,6 +40,20 @@ export function BrowserDocumentPreview({ doc }: { doc: DocumentBrowserItem | nul
       cancelled = true
     }
   }, [docId])
+
+  useEffect(() => {
+    if (highlightPassage?.trim()) setShowExtracted(true)
+  }, [highlightPassage, docId])
+
+  useEffect(() => {
+    if (!showExtracted || !highlightPassage?.trim()) return
+    const el = highlightRef.current
+    if (!el) return
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [showExtracted, highlightPassage, extracted])
 
   if (!doc) {
     return (
@@ -83,6 +107,8 @@ export function BrowserDocumentPreview({ doc }: { doc: DocumentBrowserItem | nul
           documentId={doc.document_id}
           fileKind={doc.file_kind}
           filename={doc.filename}
+          passage={highlightPassage}
+          page={highlightPage}
         />
       </div>
 
@@ -100,9 +126,16 @@ export function BrowserDocumentPreview({ doc }: { doc: DocumentBrowserItem | nul
             />
           </button>
           {showExtracted && (
-            <div className="max-h-48 overflow-y-auto border-t border-zinc-200 bg-white px-4 py-3">
+            <div
+              ref={highlightRef}
+              className="max-h-48 overflow-y-auto border-t border-zinc-200 bg-white px-4 py-3"
+            >
               <pre className="whitespace-pre-wrap font-sans text-xs leading-6 text-zinc-700">
-                {extracted.full_text}
+                {highlightPassage?.trim() ? (
+                  <HighlightedPassage text={extracted.full_text} passage={highlightPassage} />
+                ) : (
+                  extracted.full_text
+                )}
               </pre>
             </div>
           )}

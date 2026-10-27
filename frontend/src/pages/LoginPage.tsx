@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../api/types'
 import { RoleLandingPanel, RolePill } from '../components/landing/RoleLandingPanel'
 import { BrandMark } from '../components/ui/BrandMark'
@@ -87,16 +87,13 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--color-canvas)] lg:flex-row">
-      <aside className="border-b border-stone-200 px-6 py-10 lg:w-[min(42rem,46%)] lg:border-b-0 lg:border-r lg:px-12 lg:py-16">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-stone-500 transition-colors hover:text-stone-800"
-        >
+      <aside className="border-b border-stone-200 px-6 py-10 lg:w-[min(22rem,40%)] lg:border-b-0 lg:border-r lg:px-10 lg:py-16">
+        <div className="inline-flex items-center gap-2">
           <BrandMark className="size-7 rounded-lg shadow-sm" tone="brand" />
-          <span className="font-medium text-stone-800">ShopSphere</span>
-        </Link>
+          <span className="text-sm font-medium text-stone-800">ShopSphere</span>
+        </div>
 
-        <div className="mt-10 lg:mt-14">
+        <div className="mt-8 lg:mt-10">
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Demo role">
             {DEMO_ACCOUNTS.map((a) => (
               <RolePill
@@ -174,12 +171,6 @@ export function LoginPage() {
               {submitting ? 'Signing in…' : 'Enter workspace'}
             </button>
           </form>
-
-          <p className="mt-6 text-center text-xs text-stone-400">
-            <Link to="/" className="text-stone-500 underline-offset-2 hover:text-stone-700 hover:underline">
-              Choose a different role
-            </Link>
-          </p>
         </div>
       </main>
     </div>

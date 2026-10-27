@@ -49,7 +49,7 @@ def build_warehouse_work_queue(session: Session, *, limit: int = 100) -> list[di
         session.execute(
             select(InvestigationCase)
             .where(InvestigationCase.case_status.in_(list(_OPEN_CASE)))
-            .order_by(InvestigationCase.created_at.asc())
+            .order_by(InvestigationCase.created_at.desc())
         ).scalars().all()
     )
 
@@ -86,8 +86,6 @@ def build_warehouse_work_queue(session: Session, *, limit: int = 100) -> list[di
             }
         )
 
-    rank = {"receive": 0, "inspect": 1, "verdict": 2}
-    items.sort(key=lambda x: (rank.get(x["workflow_stage"], 9), x.get("return_id", "")))
     return items[:limit]
 
 

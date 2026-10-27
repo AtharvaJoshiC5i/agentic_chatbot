@@ -167,6 +167,29 @@ def parse_structured_evidence(tool: str, preview: str) -> list[dict[str, Any]]:
             )
         return items
 
+    if tool == "list_customer_notifications" and isinstance(payload, dict):
+        notifications = payload.get("notifications")
+        if isinstance(notifications, list) and notifications:
+            ncol, nrows = _rows_from_list(notifications)
+            title = default_title
+            rid = next(
+                (str(row.get("return_id") or "").strip() for row in notifications if isinstance(row, dict)),
+                "",
+            )
+            if rid:
+                title = f"{default_title} · {rid}"
+            return [
+                _make_item(
+                    tool=tool,
+                    table_name=table_name,
+                    title=title,
+                    columns=ncol,
+                    rows=nrows,
+                    record={"notifications": notifications},
+                    preview=preview,
+                )
+            ]
+
     if tool == "get_customer_return_history" and isinstance(payload, dict):
         meta_cols, meta_rows = _rows_from_dict(
             {k: v for k, v in payload.items() if k != "returns"}

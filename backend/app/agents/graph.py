@@ -14,10 +14,12 @@ from langgraph.prebuilt import create_react_agent
 from app.agents.context import agent_run_config, apply_agent_context_if_provided
 from app.llm.context_window import fit_messages_to_context_budget
 from app.agents.document_citations import enrich_tool_events_with_documents
-from app.agents.visuals import build_visuals
-from app.agents.evidence import append_source_references, build_supporting_evidence
+from app.agents.citations import build_citations, strip_legacy_sources_block
+from app.agents.evidence import build_supporting_evidence
+from app.agents.investigation_documents import gather_investigation_document_sources
 from app.agents.history import trim_history
 from app.agents.operator_response import format_operator_response
+from app.agents.tool_grounding import enforce_tool_grounding
 from app.agents.prompts import build_system_prompt
 from app.services.return_workflow import build_agent_workflow_context_message
 from app.models.enums import UserRole
@@ -63,6 +65,31 @@ def _preview_tool_content(content: Any, max_chars: int = 900) -> str:
     if len(text) <= max_chars:
         return text
     return text[: max_chars - 1] + "…"
+
+
+def _attach_investigation_document_hits(
+    tool_events: list[dict[str, Any]],
+    focus_return: str | None,
+) -> None:
+    """Investigation JSON is compacted for the LLM; attach full document hits for citations."""
+    if not any(e.get("tool") == "run_return_investigation" for e in tool_events):
+        return
+    from app.database.session import get_session_maker
+
+    session = get_session_maker()()
+    try:
+        for event in tool_events:
+            if event.get("tool") != "run_return_investigation":
+                continue
+            args = event.get("args") or {}
+            rid = args.get("return_id") or focus_return
+            if not rid:
+                continue
+            hits = gather_investigation_document_sources(session, str(rid).strip().upper())
+            if hits:
+                event["document_hits"] = hits
+    finally:
+        session.close()
 
 
 def collect_tool_events(messages: list) -> list[dict[str, Any]]:
@@ -128,7 +155,9 @@ def build_initial_messages(
                         f"Active return_id={focus_return}. "
                         "Call get_warehouse_handoff_status_tool first, then get_inspection_results. "
                         "Do not call run_return_investigation unless the user explicitly asks for policy/eligibility investigation. "
-                        "If active_case is present, you must mention that case number in your reply."
+                        "If active_case is present, you must mention that case number in your reply. "
+                        "If any tool JSON has an \"error\" field, the action failed — never claim receipt, inspection, or verdict was recorded. "
+                        "Quote the tool message and say what is still needed."
                     )
                 )
             )
@@ -232,12 +261,15 @@ def _finalize_run(
     role = user.role if user is not None else None
     final_text = format_operator_response(final_text, role=role)
 
-    tool_events = enrich_tool_events_with_documents(collect_tool_events(final_messages))
+    tool_events = collect_tool_events(final_messages)
+    _attach_investigation_document_hits(tool_events, focus_return)
+    tool_events = enrich_tool_events_with_documents(tool_events)
+    final_text = enforce_tool_grounding(final_text, tool_events, role=role)
     supporting_evidence = build_supporting_evidence(tool_events)
-    final_text = append_source_references(final_text, supporting_evidence)
+    citations = build_citations(supporting_evidence)
+    final_text = strip_legacy_sources_block(final_text)
     for event in tool_events:
         event.pop("_result_content", None)
-    visuals = build_visuals(tool_events, focus_return)
     agent_steps = build_agent_steps(workflow, include_synthesis=True)
 
     return {
@@ -245,8 +277,9 @@ def _finalize_run(
         "tool_events": tool_events,
         "supporting_evidence": supporting_evidence,
         "document_sources": supporting_evidence["documents"],
+        "citations": citations,
         "agent_steps": agent_steps,
-        "visuals": visuals,
+        "visuals": [],
         "inferred_return_id": focus_return,
         "message_count": len(final_messages),
         "llm_provider": provider_id,

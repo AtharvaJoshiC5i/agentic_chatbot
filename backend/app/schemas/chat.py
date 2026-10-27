@@ -34,11 +34,21 @@ class AgentStepOut(BaseModel):
     output: str | None = None
 
 
+class CitationOut(BaseModel):
+    index: int
+    kind: str
+    label: str
+    path: str
+    table_name: str | None = None
+    document_id: int | None = None
+
+
 class DocumentSourceOut(BaseModel):
     document_id: int
     filename: str
     file_path: str
     page_or_section: str | None = None
+    page: int | None = None
     passage: str
     relevance_score: float | None = None
     file_kind: str
@@ -68,6 +78,7 @@ class ChatResponse(BaseModel):
     agent_steps: list[AgentStepOut] = Field(default_factory=list)
     supporting_evidence: SupportingEvidenceOut | None = None
     document_sources: list[DocumentSourceOut] = Field(default_factory=list)
+    citations: list[CitationOut] = Field(default_factory=list)
     visuals: list[dict[str, Any]] = Field(default_factory=list)
     llm_provider: str
     llm_model: str

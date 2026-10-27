@@ -3,6 +3,8 @@ import type {
   AgentCapability,
   AgentStep,
   DataBrowserOverview,
+  DocumentBootstrapResult,
+  DocumentCatalogStatus,
   DocumentBrowserListResponse,
   DocumentPreview,
   StructuredTableListResponse,
@@ -233,6 +235,12 @@ export const api = {
     )
   },
 
+  getReturnWorkflow(returnId: string) {
+    return request<import('./types').ReturnWorkflowOut>(
+      `/api/returns/${encodeURIComponent(returnId)}/workflow`,
+    )
+  },
+
   getRecoveryRecommendation(returnId: string) {
     return request<RecoveryRecommendationOut>(
       `/api/recovery/returns/${encodeURIComponent(returnId)}/recommendation`,
@@ -268,15 +276,27 @@ export const api = {
 
   dataBrowserTableRows(
     tableName: string,
-    params?: { limit?: number; offset?: number },
+    params?: { limit?: number; offset?: number; col?: string; val?: string },
   ) {
     const q = new URLSearchParams()
     if (params?.limit != null) q.set('limit', String(params.limit))
     if (params?.offset != null) q.set('offset', String(params.offset))
+    if (params?.col) q.set('col', params.col)
+    if (params?.val != null) q.set('val', params.val)
     const qs = q.toString()
     return request<StructuredTableRowsResponse>(
       `/api/data-browser/tables/${encodeURIComponent(tableName)}/rows${qs ? `?${qs}` : ''}`,
     )
+  },
+
+  dataBrowserDocumentsStatus() {
+    return request<DocumentCatalogStatus>('/api/data-browser/documents/status')
+  },
+
+  dataBrowserDocumentsBootstrap() {
+    return request<DocumentBootstrapResult>('/api/data-browser/documents/bootstrap', {
+      method: 'POST',
+    })
   },
 
   dataBrowserDocuments(params?: {
@@ -285,6 +305,7 @@ export const api = {
     document_type?: string
     return_id?: string
     search?: string
+    document_id?: number
   }) {
     const q = new URLSearchParams()
     if (params?.limit != null) q.set('limit', String(params.limit))
@@ -292,6 +313,7 @@ export const api = {
     if (params?.document_type) q.set('document_type', params.document_type)
     if (params?.return_id) q.set('return_id', params.return_id)
     if (params?.search) q.set('search', params.search)
+    if (params?.document_id != null) q.set('document_id', String(params.document_id))
     const qs = q.toString()
     return request<DocumentBrowserListResponse>(
       `/api/data-browser/documents${qs ? `?${qs}` : ''}`,

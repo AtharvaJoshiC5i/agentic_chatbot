@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { CustomerNotificationOut } from '../../api/types'
 import { useToast } from '../../context/ToastContext'
+import { notifyWorkspaceDashboardRefresh } from '../../lib/workspaceRefresh'
 import { fieldInput } from '../ui/styles'
 import { button } from '../ui/styles'
 
@@ -28,6 +29,7 @@ export function VerdictForm({ returnId, resolution, onDone }: { returnId: string
     try {
       await api.recordVerdict(returnId, { feasible, recommendation: feasible ? 'proceed' : 'decline', notes: notes.trim() || undefined })
       showToast(`Verdict sent to the returns analyst for ${returnId}.`)
+      notifyWorkspaceDashboardRefresh()
       onDone()
     } catch (e) {
       showToast(errorText(e, 'Could not record the verdict'))
@@ -73,6 +75,7 @@ export function DeclineForm({ returnId, suggestedReason, onDone }: { returnId: s
     try {
       await api.declineReturn(returnId, reason.trim())
       showToast(`Request declined. Review the customer message draft for ${returnId}.`)
+      notifyWorkspaceDashboardRefresh()
       onDone()
     } catch (e) {
       showToast(errorText(e, 'Could not decline the request'))
@@ -138,6 +141,7 @@ export function NotificationReview({ notificationId, onDone }: { notificationId:
     try {
       await api.sendNotification(notificationId, { subject, body })
       showToast('Message confirmation recorded. This demo did not send an email. The case and return are closed.')
+      notifyWorkspaceDashboardRefresh()
       onDone()
     } catch (e) {
       showToast(errorText(e, 'Could not record message confirmation'))

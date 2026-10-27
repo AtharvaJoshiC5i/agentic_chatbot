@@ -11,6 +11,29 @@ class DataBrowserOverview(BaseModel):
     database_url: str
     database_file: str | None = None
     database_file_exists: bool = False
+    documents_ready: bool = False
+    documents_status_message: str = ""
+
+
+class DocumentCatalogStatusOut(BaseModel):
+    manifest_exists: bool
+    manifest_path: str
+    return_count: int
+    metadata_count: int
+    chroma_chunk_count: int
+    ready: bool
+    message: str
+
+
+class DocumentBootstrapResponse(BaseModel):
+    ok: bool
+    metadata_count: int
+    chroma_chunk_count: int
+    errors: list[str] = Field(default_factory=list)
+    manifest_rows_inserted: int = 0
+    documents_processed: int = 0
+    chunks_indexed: int = 0
+    ingest_failures: list[str] = Field(default_factory=list)
 
 
 class StructuredTableSummary(BaseModel):
@@ -24,6 +47,11 @@ class StructuredTableListResponse(BaseModel):
     tables: list[StructuredTableSummary]
 
 
+class StructuredRowMatch(BaseModel):
+    column: str
+    value: str
+
+
 class StructuredTableRowsResponse(BaseModel):
     table_name: str
     label: str
@@ -32,6 +60,7 @@ class StructuredTableRowsResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    matched: StructuredRowMatch | None = None
 
 
 class DocumentBrowserItem(BaseModel):

@@ -298,6 +298,12 @@ class WorkspaceQueueItem(BaseModel):
     latest_inspection: dict | None = None
     case: dict | None = None
     workflow_timeline: list[dict[str, Any]] = Field(default_factory=list)
+    last_activity_at: datetime | None = None
+    last_update_summary: str | None = None
+    last_update_actor: str | None = None
+    last_update_actor_label: str | None = None
+    handoff_from_other: bool | None = None
+    is_highlighted: bool | None = None
 
 
 class WorkspaceDashboardSection(BaseModel):

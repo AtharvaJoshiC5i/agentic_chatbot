@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { WorkspaceDashboardOut, WorkspaceQueueItem } from '../../api/types'
+import { supervisorAgentPrompt } from '../../lib/workflowAgent'
 import { useToast } from '../../context/ToastContext'
 import { formatInrFromPaise, humanize } from '../../lib/format'
 import { button } from '../ui/styles'
 import { Badge } from '../ui/Badge'
+import { AskAgentLink } from './AskAgentLink'
+import { QueueUpdateHint } from './QueueUpdateHint'
 import { RejectReason } from './RowActions'
 
 const FILTERS = [
@@ -13,16 +15,6 @@ const FILTERS = [
   { id: 'refund', label: 'Refunds', match: (k: string) => k === 'refund' },
   { id: 'replacement', label: 'Replacements', match: (k: string) => k === 'replacement' },
 ] as const
-
-function suggestedPrompt(row: WorkspaceQueueItem): string {
-  const rid = row.return_id ?? ''
-  const kind = row.approval_kind ?? row.action_type ?? 'request'
-  return (
-    `Use build_return_timeline_tool and get_return_workflow_status for ${rid}. Review the complete chronological case history, inspections, warehouse verdict and analyst's pending ${kind} request ` +
-    `(inspection on file: ${row.inspection_count ?? '—'}). ` +
-    'Summarize risks and recommend approve or reject. If I approve in chat, use approve_action_request for action requests, approve_refund_record for refunds, or decide_replacement_request for replacements.'
-  )
-}
 
 export function SupervisorApprovalsQueue({
   data,
@@ -171,7 +163,7 @@ function ApprovalRow({
   const [rejecting, setRejecting] = useState(false)
   const rid = row.return_id ?? row.title
   const kind = (row.approval_kind ?? 'request').toLowerCase()
-  const prompt = suggestedPrompt(row)
+  const prompt = supervisorAgentPrompt(row)
   const verdict = typeof row.warehouse_verdict === 'object' ? row.warehouse_verdict : null
 
   const decide = (approve: boolean, reason?: string) => {
@@ -187,6 +179,9 @@ function ApprovalRow({
       <td className="px-4 py-3">
         <p className="font-mono text-sm font-semibold text-stone-900">{rid}</p>
         <p className="mt-0.5 text-xs text-stone-500">{row.subtitle}</p>
+        <div className="mt-1">
+          <QueueUpdateHint row={row} />
+        </div>
         {row.inspection_count != null && row.inspection_count > 0 && (
           <p className="mt-0.5 text-xs text-emerald-700">Inspection on file</p>
         )}
@@ -235,9 +230,7 @@ function ApprovalRow({
         )}
       </td>
       <td className="hidden px-4 py-3 md:table-cell">
-        <Link to={`/workspace?return=${encodeURIComponent(rid)}`} state={{ draftMessage: prompt }} className={button('secondary', 'sm')}>
-          Ask agent
-        </Link>
+        <AskAgentLink returnId={rid} draftMessage={prompt} variant="secondary" />
       </td>
     </tr>
   )

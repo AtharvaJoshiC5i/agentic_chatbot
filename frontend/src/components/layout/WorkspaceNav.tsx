@@ -1,6 +1,6 @@
 import { Database, Inbox, MessageSquare } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { BrandMark } from '../ui/BrandMark'
@@ -9,12 +9,14 @@ import { showsSupervisorApprovalsNav, usesFocusedOpsNav } from '../../lib/person
 
 export function WorkspaceNav() {
   const { role } = useAuth()
+  const location = useLocation()
   const [approvalCount, setApprovalCount] = useState(0)
   const approvalsNav = showsSupervisorApprovalsNav(role)
   const focusedOps = usesFocusedOpsNav(role)
+  const onApprovalsDashboard = location.pathname.includes('/workspace/dashboard')
 
   useEffect(() => {
-    if (!approvalsNav) return
+    if (!approvalsNav || onApprovalsDashboard) return
     let cancelled = false
     const load = () => {
       api
@@ -27,14 +29,12 @@ export function WorkspaceNav() {
         .catch(() => {})
     }
     load()
-    const timer = window.setInterval(load, 20_000)
-    window.addEventListener('focus', load)
+    const timer = window.setInterval(load, 60_000)
     return () => {
       cancelled = true
       window.clearInterval(timer)
-      window.removeEventListener('focus', load)
     }
-  }, [approvalsNav])
+  }, [approvalsNav, onApprovalsDashboard])
 
   return (
     <header className="workspace-header flex h-12 shrink-0 items-center gap-4 px-4 sm:px-5">

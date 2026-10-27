@@ -24,7 +24,7 @@ export function ChatSidebar({
   activeId,
   onSelect,
   onNewChat,
-  onSearchReturn,
+  onOpenReturn,
   onDeleteConversation,
 }: {
   open: boolean
@@ -33,7 +33,7 @@ export function ChatSidebar({
   activeId: string | null
   onSelect: (id: string) => void
   onNewChat: () => void
-  onSearchReturn: (returnId: string) => void
+  onOpenReturn: (returnId: string) => void
   onDeleteConversation: (id: string) => void
 }) {
   const navigate = useNavigate()
@@ -176,7 +176,7 @@ export function ChatSidebar({
                         type="button"
                         className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[13px] hover:bg-stone-50"
                         onClick={() => {
-                          onSearchReturn(r.return_id)
+                          onOpenReturn(r.return_id)
                           setQuery('')
                           setResults([])
                         }}
@@ -210,27 +210,27 @@ export function ChatSidebar({
               <p className="px-2 py-6 text-center text-[12px] leading-relaxed text-stone-500">
                 No conversations yet.
                 <span className="mt-0.5 block text-[11px] text-stone-400">
-                  Start with a return ID or sample prompt.
+                  Open a return from your queue or start a new chat.
                 </span>
               </p>
             ) : (
               <ul className="space-y-0.5">
                 {sorted.map((c) => {
-                  const active = c.id === activeId
+                  const isActive = c.id === activeId
                   return (
                     <li key={c.id} className="group relative">
                       <button
                         type="button"
                         onClick={() => onSelect(c.id)}
                         title={c.title}
-                        aria-current={active ? 'true' : undefined}
+                        aria-current={isActive ? 'true' : undefined}
                         className={`relative flex w-full items-stretch rounded-md py-2 pr-8 pl-2.5 text-left transition-colors ${
-                          active
+                          isActive
                             ? 'bg-stone-100 text-stone-900'
                             : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
                         }`}
                       >
-                        {active && (
+                        {isActive && (
                           <span
                             className="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-accent-600"
                             aria-hidden
@@ -245,9 +245,7 @@ export function ChatSidebar({
                               {formatRelativeShort(c.updatedAt)}
                             </span>
                             {c.returnId && (
-                              <span
-                                className="inline-flex rounded px-1 py-px font-mono text-[9px] font-medium text-stone-500"
-                              >
+                              <span className="inline-flex rounded px-1 py-px font-mono text-[9px] font-medium text-stone-500">
                                 {c.returnId}
                               </span>
                             )}
@@ -281,7 +279,7 @@ export function ChatSidebar({
                 <p className="truncate text-[11px] font-semibold leading-tight text-stone-800">
                   {username ? `@${username}` : role ? persona.shortName : 'Signed in'}
                 </p>
-                <p className="truncate text-[10px] leading-tight text-stone-500">{persona.headerTagline}</p>
+                <p className="truncate text-[10px] leading-tight text-stone-500">{persona.shortName}</p>
               </div>
               <button
                 type="button"

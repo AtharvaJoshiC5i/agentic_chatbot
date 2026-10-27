@@ -43,6 +43,19 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             boot.close()
     except Exception:  # noqa: BLE001
         logger.exception("Demo user bootstrap failed; run: python scripts/seed_users.py")
+    if settings.documents_auto_bootstrap:
+        try:
+            from app.services.document_bootstrap import ensure_documents_bootstrapped_if_empty
+
+            doc_session = get_session_maker()()
+            try:
+                await asyncio.to_thread(ensure_documents_bootstrapped_if_empty, doc_session)
+            finally:
+                doc_session.close()
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "Document auto-bootstrap failed; run: python scripts/bootstrap_documents.py"
+            )
     logger.info(
         "Starting %s v%s [%s]",
         settings.app_name,
